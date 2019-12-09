@@ -1,2 +1,2 @@
-# atmos-fr
+# Atmos'fr
 Projet CESI
