@@ -5,11 +5,22 @@ atmosDB = pymysql.connect(
     user="atmos",
     passwd="atmos",
     charset="utf8",
-    db="atmosfr"
-
+    db="atmos"
 )
 
 dbCursor = atmosDB.cursor()
+
+dbCursor.execute("SELECT * from MESURE.mesure_date")
+measuresDate = dbCursor.fetchall();
+
+dbCursor.execute("SELECT * from MESURE.mesure_temp")
+measuresTemp = dbCursor.fetchall();
+
+dbCursor.execute("SELECT * from MESURE.mesure_humidite")
+measuresHumidite = dbCursor.fetchall();
+
+dbCursor.execute("SELECT * from MESURE")
+measureTable = dbCursor.fetchall()
 
 from flask import Flask
 from flask_restful import reqparse, abort, Api, Resource
@@ -17,11 +28,17 @@ from flask_restful import reqparse, abort, Api, Resource
 app = Flask(__name__)
 api = Api(app=app)
 
-MEASURES = {
-    '1': {'temp': '20.5', 'humidite': '30%', 'date': '09/12/2019 17:30'},
-    '2': {'temp': '19.3', 'humidite': '50%', 'date': '09/12/2019 18:30'},
-    '3': {'temp': '10.4', 'humidite': '90%', 'date': '09/12/2019 19:30'},
-}
+for x in measureTable:
+    MEASURES[x] = {
+        'x': {"'temp':" + measuresTemp[x] +" , 'humidite':" + measuresHumidite[x] +" , 'date':" + measuresDate[x]}
+    }
+
+
+# MEASURES = {
+#     '1': {'temp': '20.5', 'humidite': '30%', 'date': '09/12/2019 17:30'},
+#     '2': {'temp': '19.3', 'humidite': '50%', 'date': '09/12/2019 18:30'},
+#     '3': {'temp': '10.4', 'humidite': '90%', 'date': '09/12/2019 19:30'},
+# }
 
 
 def abort_if_todo_doesnt_exist(measure_id):
