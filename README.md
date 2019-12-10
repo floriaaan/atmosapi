@@ -4,8 +4,9 @@ Réalisation d'une API REST avec Flask (Python)
 
 ## Comment installer le projet ⁉️
 
-```
 Server-side
+
+```
 
 python3 -m pip install pymysql
 python3 -m pip install flask
@@ -19,7 +20,7 @@ git clone https://github.com/floriaaan/atmos-fr
 ```
 
 ## Status
-Le projet est en amélioration continue, selon mon temps libre. N'hésitez pas à envoyer des "pull request"s
+Le rendu final est présenté Vendredi 20 Décembre 2019, lors d'une soutenance orale.
 
 
 
