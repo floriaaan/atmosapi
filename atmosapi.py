@@ -10,13 +10,13 @@ atmosDB = pymysql.connect(
 
 dbCursor = atmosDB.cursor()
 
-dbCursor.execute("SELECT * from MESURE.mesure_date")
+dbCursor.execute("SELECT mesure_date from MESURE")
 measuresDate = dbCursor.fetchall();
 
-dbCursor.execute("SELECT * from MESURE.mesure_temp")
+dbCursor.execute("SELECT mesure_temp from MESURE")
 measuresTemp = dbCursor.fetchall();
 
-dbCursor.execute("SELECT * from MESURE.mesure_humidite")
+dbCursor.execute("SELECT mesure_humidite from MESURE")
 measuresHumidite = dbCursor.fetchall();
 
 dbCursor.execute("SELECT * from MESURE")
