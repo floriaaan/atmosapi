@@ -1,7 +1,7 @@
 import pymysql
 
 atmosDB = pymysql.connect(
-    host="127.0.0.1",
+    host="localhost",
     user="atmos",
     passwd="atmos",
     charset="utf8",
@@ -29,9 +29,10 @@ app = Flask(__name__)
 api = Api(app=app)
 
 for x in measureTable:
-    MEASURES[x] = {
-        'x': {"'temp':" + measuresTemp[x] +" , 'humidite':" + measuresHumidite[x] +" , 'date':" + measuresDate[x]}
-    }
+    # MEASURES[x] = {
+    #     'x': {"'temp':" + measuresTemp[x] +" , 'humidite':" + measuresHumidite[x] +" , 'date':" + measuresDate[x]}
+    # }
+    MEASURES[x] = dict(temp=measuresTemp[x], humidite=measuresHumidite[x], date=measuresDate[x])
 
 
 # MEASURES = {
