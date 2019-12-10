@@ -25,7 +25,7 @@ Le projet est en amélioration continue, selon mon temps libre. N'hésitez pas �
 
 ## Crédits
 - Langlois William <3
-- Inconnu Léo
+- Leclerc Léo
 - Dehant Emilie
 - Leroux Florian
 
