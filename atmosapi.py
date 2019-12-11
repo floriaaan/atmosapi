@@ -4,6 +4,7 @@
 
 import pymysql
 import time
+import datetime
 import json
 
 atmosDB = pymysql.connect(
@@ -16,28 +17,27 @@ atmosDB = pymysql.connect(
 
 dbCursor = atmosDB.cursor()
 
-def tuple2number(tuple):
-    listTuple = list(tuple)
-    return listTuple[0]
-
 def sql_select_date(id):
     #Date of Measures
     dbCursor.execute("SELECT mesure_date FROM MESURE WHERE id_mesure='%s'" % id)
-    date = dbCursor.fetchall()
+    date = dbCursor.fetchone()
     returndate = date[0][0].strftime("%Y-%m-%d %H:%M:%S")
     return returndate
 
 def sql_select_temp(id):
     #Temp of Measures
     dbCursor.execute("SELECT mesure_temp FROM MESURE WHERE id_mesure='%s'" % id)
-    temp = json.dumps(dbCursor.fetchall())
+    temp = json.dumps(dbCursor.fetchone())
     return temp
 
 def sql_select_humid(id):
     #Humid of Measures
     dbCursor.execute("SELECT mesure_humidite FROM MESURE WHERE id_mesure='%s'" % id)
-    humid = json.dumps(dbCursor.fetchall())
+    humid = json.dumps(dbCursor.fetchone())
     return humid
+
+def get_List():
+    
 
 #################################
 #           API Part            #
@@ -62,7 +62,7 @@ parser.add_argument('date')
 
 # Measure
 # GET & DELETE & POST
-class Measure(Resource):
+class MeasureOne(Resource):
     def get(self, measure_id):
         #SQL SELECT
         str_mesure = {'temp': sql_select_temp(measure_id), 'humidite': sql_select_humid(measure_id), 'date': sql_select_date(measure_id)}
@@ -73,12 +73,13 @@ class Measure(Resource):
         # del MEASURES[measure_id] # SQL DELETE
         return '', 204
 
-    def post(self, measure_id):
+    def post(self):
         args = parser.parse_args()
         values = {'temp': args['temp'],'humidite': args['humidite'], 'date': args['date']}
         # MEASURES[measure_id] = values
         #SQL INSERT
-        dbCursor.execute("INSERT INTO MESURE (id_capteur, mesure_date, mesure_temp, mesure_humidite) VALUES (%d, '2019/12/09 17:30:00', %d, %d)" % (measure_id, args['temp'], args['humidite']))
+        dateNow = datetime.datetime.now
+        dbCursor.execute("INSERT INTO MESURE (id_capteur, mesure_date, mesure_temp, mesure_humidite) VALUES (%d, %s, %d, %d)" % (1, dateNow, args['temp'], args['humidite']))
         return values, 201
 
 
@@ -95,13 +96,36 @@ class MeasureList(Resource):
     def get(self):
         return MEASURES
 
+# Measure
+# GET & DELETE & POST
+class MeasureAll(Resource):
+    def get(self):
+        #SQL SELECT
+        dbCursor.execute("SELECT id_mesure FROM MESURE")
+        ids=dbCursor.fetchall()
+        MEASURES = []
+        for i in range (1, len(ids)):
+            MEASURES.append({'temp': sql_select_temp(i), 'humidite': sql_select_humid(i), 'date': sql_select_date(i)})
+        return MEASURES
+
+
+    def post(self):
+        args = parser.parse_args()
+        values = {'temp': args['temp'],'humidite': args['humidite'], 'date': args['date']}
+        # MEASURES[measure_id] = values
+        #SQL INSERT
+        dateNow = datetime.datetime.now
+        dbCursor.execute("INSERT INTO MESURE (id_capteur, mesure_date, mesure_temp, mesure_humidite) VALUES (%d, %s, %d, %d)" % (1, dateNow, args['temp'], args['humidite']))
+        return values, 201
+
 
 ##
 ## Actually setup the Api resource routing here
 ##
 api.add_resource(MeasureDebug, '/atmos/debug/measure/<measure_id>')
 api.add_resource(MeasureList, '/atmos/measureList/')
-api.add_resource(Measure, '/atmos/measure/<measure_id>')
+api.add_resource(MeasureOne, '/atmos/measure/<measure_id>')
+api.add_resource(MeasureAll, '/atmos/measure/')
 
 
 if __name__ == '__main__':
