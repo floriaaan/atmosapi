@@ -53,8 +53,8 @@ MEASURES = []
 
 
 def abort_exist(measure_id):
-    if measure_id not in measureID_SQL:
-        abort(404, message="Measure {} doesn't exist".format(measure_id))
+    #if measure_id not in measureID_SQL:
+        #abort(404, message="Measure {} doesn't exist".format(measure_id))
 
 parser = reqparse.RequestParser()
 parser.add_argument('temp')
@@ -90,7 +90,8 @@ class Measure(Resource):
 # GET
 class MeasureListAll(Resource):
     def get(self):
-        return MEASURES
+        debug = {'temp': sql_select_temp(1), 'humidite': sql_select_humid(1), 'date': sql_select_date(1)}
+        return debug
 
 # MeasureListFiveLast
 # GET
@@ -102,7 +103,7 @@ class MeasureListFiveLast(Resource):
 ##
 ## Actually setup the Api resource routing here
 ##
-api.add_resource(MeasureListAll, '/atmos/measureListAll/')
+api.add_resource(MeasureListAll, '/atmos/debug/')
 api.add_resource(MeasureListFiveLast, '/atmos/measureList/')
 api.add_resource(Measure, '/atmos/measure/<measure_id>')
 
