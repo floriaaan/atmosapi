@@ -20,7 +20,7 @@ dbCursor = atmosDB.cursor()
 def sql_select_date(id):
     #Date of Measures
     dbCursor.execute("SELECT mesure_date FROM MESURE WHERE id_mesure='%s'" % id)
-    date = dbCursor.fetchone()
+    date = dbCursor.fetchall()
     returndate = date[0][0].strftime("%Y-%m-%d %H:%M:%S")
     return returndate
 
@@ -36,8 +36,7 @@ def sql_select_humid(id):
     humid = json.dumps(dbCursor.fetchone())
     return humid
 
-def get_List():
-    
+   
 
 #################################
 #           API Part            #

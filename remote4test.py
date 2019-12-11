@@ -5,6 +5,7 @@
 import pymysql
 import time
 import json
+import datetime
 
 atmosDB = pymysql.connect(
     host="192.168.43.57",
@@ -40,7 +41,11 @@ def getOne(id):
     print(str_mesure)
 
 def getList():
-    dbCursor.execute("SELECT id_mesure FROM MESURE")
+    DateNow = datetime.datetime.now()
+    print(DateNow)
+    DateBefore = DateNow - datetime.datetime(year=0, month=0, day=1)
+    print(DateBefore)
+    dbCursor.execute("SELECT id_mesure FROM MESURE WHERE mesure_date between '%s' and '%s'" %(DateBefore, DateNow))
     ids=dbCursor.fetchall()
     MEASURES = []
     for i in range (1, len(ids)):
