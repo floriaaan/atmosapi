@@ -26,20 +26,20 @@ measureID_SQL = json.dumps(measureID_SQL)
 def sql_select_date(id):
     #Date of Measures
     dbCursor.execute("SELECT mesure_date FROM MESURE WHERE id_mesure='%s'" % id)
-    date = dbCursor.fetchall();
-    returndate = date[0][0].strftime("%Y-%m-%d %H:%M:%S")
+    date = dbCursor.fetchall()
+    returndate = json.dumps(date[0][0].strftime("%Y-%m-%d %H:%M:%S"))
     return returndate
 
 def sql_select_temp(id):
     #Temp of Measures
     dbCursor.execute("SELECT mesure_temp FROM MESURE WHERE id_mesure='%s'" % id)
-    temp = dbCursor.fetchall();
+    temp = json.dumps(dbCursor.fetchall())
     return temp
 
 def sql_select_humid(id):
     #Humid of Measures
     dbCursor.execute("SELECT mesure_humidite FROM MESURE WHERE id_mesure='%s'" % id)
-    humid = dbCursor.fetchall();
+    humid = json.dumps(dbCursor.fetchall())
     return humid
 
 #################################
