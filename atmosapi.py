@@ -55,6 +55,7 @@ MEASURES = []
 def abort_exist(measure_id):
     #if measure_id not in measureID_SQL:
         #abort(404, message="Measure {} doesn't exist".format(measure_id))
+    print("debug purposes")
 
 parser = reqparse.RequestParser()
 parser.add_argument('temp')
