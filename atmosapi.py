@@ -20,23 +20,23 @@ dbCursor = atmosDB.cursor()
 dbCursor.execute("SELECT id_mesure FROM MESURE")
 measureID_SQL = dbCursor.fetchall()
 
-#Date of Measures
-dbCursor.execute("SELECT mesure_date from MESURE")
-measuresDate_SQL = dbCursor.fetchall();
+def sql_select_date(id):
+    #Date of Measures
+    dbCursor.execute("SELECT mesure_date FROM MESURE WHERE id_mesure='%d'" % id)
+    date = dbCursor.fetchall();
+    return date
 
-#Temperature of Measures
-dbCursor.execute("SELECT mesure_temp from MESURE")
-measuresTemp_SQL = dbCursor.fetchall();
+def sql_select_temp(id):
+    #Temp of Measures
+    dbCursor.execute("SELECT mesure_temp FROM MESURE WHERE id_mesure='%d'" % id)
+    temp = dbCursor.fetchall();
+    return temp
 
-#Humidity of Measures
-dbCursor.execute("SELECT mesure_humidite from MESURE")
-measuresHumidite_SQL = dbCursor.fetchall();
-
-#All of Measures
-#dbCursor.execute("SELECT * from MESURE")
-#measureTable_SQL = dbCursor.fetchall()
-
-
+def sql_select_humid(id):
+    #Humid of Measures
+    dbCursor.execute("SELECT mesure_humidite FROM MESURE WHERE id_mesure='%d'" % id)
+    humid = dbCursor.fetchall();
+    return humid
 
 #################################
 #           API Part            #
@@ -49,19 +49,7 @@ from flask_restful import reqparse, abort, Api, Resource
 app = Flask(__name__)
 api = Api(app=app)
 
-MEASURES = dict
-
-for x in measureID_SQL:
-    MEASURES[x] = {
-        'x': {"'temp':" + measuresTemp_SQL[x] +" , 'humidite':" + measuresHumidite_SQL[x] +" , 'date':" + measuresDate_SQL[x]}
-    }
-
-
-# MEASURES = {
-#     '1': {'temp': '20.5', 'humidite': '30%', 'date': '09/12/2019 17:30'},
-#     '2': {'temp': '19.3', 'humidite': '50%', 'date': '09/12/2019 18:30'},
-#     '3': {'temp': '10.4', 'humidite': '90%', 'date': '09/12/2019 19:30'},
-# }
+MEASURES = []
 
 
 def abort_exist(measure_id):
@@ -80,18 +68,21 @@ class Measure(Resource):
     def get(self, measure_id):
         abort_exist(measure_id)
         #SQL SELECT
-        return MEASURES[measure_id]
+        str_mesure = {'temp': sql_select_temp(measure_id), 'humidite': sql_select_humid(measure_id), 'date': sql_select_date(measure_id)}
+        return str_mesure
 
     def delete(self, measure_id):
         abort_exist(measure_id)
-        del MEASURES[measure_id] # SQL DELETE
+        dbCursor.execute("DELETE FROM 'MESURE' WHERE id_mesure='%d'" % measure_id)
+        # del MEASURES[measure_id] # SQL DELETE
         return '', 204
 
     def post(self, measure_id):
         args = parser.parse_args()
         values = {'temp': args['temp'],'humidite': args['humidite'], 'date': args['date']}
-        MEASURES[measure_id] = values
+        # MEASURES[measure_id] = values
         #SQL INSERT
+        dbCursor.execute("INSERT INTO MESURE (id_capteur, mesure_date, mesure_temp, mesure_humidite) VALUES (%d, '2019/12/09 17:30:00', %d, %d)" % (measure_id, args['temp'], args['humidite']))
         return values, 201
 
 
