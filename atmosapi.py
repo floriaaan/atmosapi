@@ -4,6 +4,7 @@
 
 import pymysql
 import time
+import json
 
 atmosDB = pymysql.connect(
     host="127.0.0.1",
@@ -20,13 +21,14 @@ dbCursor = atmosDB.cursor()
 #ID of Measures
 dbCursor.execute("SELECT id_mesure FROM MESURE")
 measureID_SQL = dbCursor.fetchall()
+measureID_SQL = json.dumps(measureID_SQL)
 
 def sql_select_date(id):
     #Date of Measures
     dbCursor.execute("SELECT mesure_date FROM MESURE WHERE id_mesure='%s'" % id)
     date = dbCursor.fetchall();
-    date.strftime("%Y-%m-%d %H:%M:%S")
-    return date
+    returndate = date[0].strftime("%Y-%m-%d %H:%M:%S")
+    return returndate
 
 def sql_select_temp(id):
     #Temp of Measures
@@ -55,9 +57,8 @@ MEASURES = []
 
 
 def abort_exist(measure_id):
-    #if measure_id not in measureID_SQL:
-        #abort(404, message="Measure {} doesn't exist".format(measure_id))
-    print("debug purposes")
+    if measure_id not in measureID_SQL[0]:
+        abort(404, message="Measure {} doesn't exist".format(measure_id))
 
 parser = reqparse.RequestParser()
 parser.add_argument('temp')
@@ -89,9 +90,9 @@ class Measure(Resource):
         return values, 201
 
 
-# MeasureListAll
+# MeasureDebug
 # GET
-class MeasureListAll(Resource):
+class MeasureDebug(Resource):
     def get(self):
         debug = {'temp': sql_select_temp(1), 'humidite': sql_select_humid(1), 'date': sql_select_date(1)}
         return debug
@@ -106,7 +107,7 @@ class MeasureListFiveLast(Resource):
 ##
 ## Actually setup the Api resource routing here
 ##
-api.add_resource(MeasureListAll, '/atmos/debug/')
+api.add_resource(MeasureDebug, '/atmos/debug/')
 api.add_resource(MeasureListFiveLast, '/atmos/measureList/')
 api.add_resource(Measure, '/atmos/measure/<measure_id>')
 
