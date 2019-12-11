@@ -31,14 +31,12 @@ def sql_select_temp(id):
     #Temp of Measures
     dbCursor.execute("SELECT mesure_temp FROM MESURE WHERE id_mesure='%s'" % id)
     temp = json.dumps(dbCursor.fetchall())
-    tempNb = tuple2number(temp)
-    return tempNb
+    return temp
 
 def sql_select_humid(id):
     #Humid of Measures
     dbCursor.execute("SELECT mesure_humidite FROM MESURE WHERE id_mesure='%s'" % id)
     humid = json.dumps(dbCursor.fetchall())
-    humidNb = tuple2number(humid)
     return humid
 
 #################################
