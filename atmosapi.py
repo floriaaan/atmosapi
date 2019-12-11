@@ -27,7 +27,7 @@ def sql_select_date(id):
     #Date of Measures
     dbCursor.execute("SELECT mesure_date FROM MESURE WHERE id_mesure='%s'" % id)
     date = dbCursor.fetchall();
-    returndate = date[0].strftime("%Y-%m-%d %H:%M:%S")
+    returndate = date[0][0].strftime("%Y-%m-%d %H:%M:%S")
     return returndate
 
 def sql_select_temp(id):
@@ -57,7 +57,9 @@ MEASURES = []
 
 
 def abort_exist(measure_id):
-    if measure_id not in measureID_SQL[0]:
+    print(measureID_SQL)
+    print(measureID_SQL[int(measure_id) - 1])
+    if measure_id not in measureID_SQL[int(measure_id) - 1]:
         abort(404, message="Measure {} doesn't exist".format(measure_id))
 
 parser = reqparse.RequestParser()
@@ -93,13 +95,13 @@ class Measure(Resource):
 # MeasureDebug
 # GET
 class MeasureDebug(Resource):
-    def get(self):
-        debug = {'temp': sql_select_temp(1), 'humidite': sql_select_humid(1), 'date': sql_select_date(1)}
+    def get(self, measure_id):
+        debug = {'temp': sql_select_temp(measure_id), 'humidite': sql_select_humid(measure_id), 'date': sql_select_date(measure_id)}
         return debug
 
-# MeasureListFiveLast
+# MeasureList - which list five last measures
 # GET
-class MeasureListFiveLast(Resource):
+class MeasureList(Resource):
     def get(self):
         return MEASURES
 
@@ -107,8 +109,8 @@ class MeasureListFiveLast(Resource):
 ##
 ## Actually setup the Api resource routing here
 ##
-api.add_resource(MeasureDebug, '/atmos/debug/')
-api.add_resource(MeasureListFiveLast, '/atmos/measureList/')
+api.add_resource(MeasureDebug, '/atmos/debug/measure/<measure_id>')
+api.add_resource(MeasureList, '/atmos/measureList/')
 api.add_resource(Measure, '/atmos/measure/<measure_id>')
 
 
