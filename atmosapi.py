@@ -14,22 +14,16 @@ atmosDB = pymysql.connect(
     db="atmos"
 )
 
-dbCursor = atmosDB.cursor(pymysql.cursors.DictCursor)
+dbCursor = atmosDB.cursor()
 
 
-#Acquiring Datas from MariaDB server
-#ID of Measures
-dbCursor.execute("SELECT id_mesure FROM MESURE")
-measureID_SQL = dbCursor.fetchall()
-measureID_SQL = list(measureID_SQL)
 
 def sql_select_date(id):
     #Date of Measures
     dbCursor.execute("SELECT mesure_date FROM MESURE WHERE id_mesure='%s'" % id)
     date = dbCursor.fetchall()
-    return json.dumps(str(date[0]))
-    #returndate = date[0][0].strftime("%Y-%m-%d %H:%M:%S")
-    #return returndate
+    returndate = date[0][0].strftime("%Y-%m-%d %H:%M:%S")
+    return returndate
 
 def sql_select_temp(id):
     #Temp of Measures
@@ -57,9 +51,6 @@ api = Api(app=app)
 MEASURES = []
 
 
-def abort_exist(measure_id):
-    if measureID_SQL[int(measure_id) - 1] not in measureID_SQL:
-        abort(404, message="Measure {} doesn't exist".format(measure_id))
 
 parser = reqparse.RequestParser()
 parser.add_argument('temp')
@@ -71,13 +62,11 @@ parser.add_argument('date')
 # GET & DELETE & POST
 class Measure(Resource):
     def get(self, measure_id):
-        abort_exist(measure_id)
         #SQL SELECT
         str_mesure = {'temp': sql_select_temp(measure_id), 'humidite': sql_select_humid(measure_id), 'date': sql_select_date(measure_id)}
         return str_mesure
 
     def delete(self, measure_id):
-        abort_exist(measure_id)
         dbCursor.execute("DELETE FROM 'MESURE' WHERE id_mesure='%d'" % measure_id)
         # del MEASURES[measure_id] # SQL DELETE
         return '', 204
