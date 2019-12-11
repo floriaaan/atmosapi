@@ -14,21 +14,22 @@ atmosDB = pymysql.connect(
     db="atmos"
 )
 
-dbCursor = atmosDB.cursor()
+dbCursor = atmosDB.cursor(pymysql.cursors.DictCursor)
 
 
 #Acquiring Datas from MariaDB server
 #ID of Measures
 dbCursor.execute("SELECT id_mesure FROM MESURE")
 measureID_SQL = dbCursor.fetchall()
-measureID_SQL = json.dumps(measureID_SQL)
+measureID_SQL = list(measureID_SQL)
 
 def sql_select_date(id):
     #Date of Measures
     dbCursor.execute("SELECT mesure_date FROM MESURE WHERE id_mesure='%s'" % id)
     date = dbCursor.fetchall()
-    returndate = json.dumps(date[0][0].strftime("%Y-%m-%d %H:%M:%S"))
-    return returndate
+    return json.dumps(str(date[0]))
+    #returndate = date[0][0].strftime("%Y-%m-%d %H:%M:%S")
+    #return returndate
 
 def sql_select_temp(id):
     #Temp of Measures
@@ -57,9 +58,7 @@ MEASURES = []
 
 
 def abort_exist(measure_id):
-    print(measureID_SQL)
-    print(measureID_SQL[int(measure_id) - 1])
-    if measure_id not in measureID_SQL[int(measure_id) - 1]:
+    if measureID_SQL[int(measure_id) - 1] not in measureID_SQL:
         abort(404, message="Measure {} doesn't exist".format(measure_id))
 
 parser = reqparse.RequestParser()
