@@ -5,6 +5,7 @@
 import pymysql
 import time
 import datetime
+from datetime import timedelta
 import json
 
 atmosDB = pymysql.connect(
@@ -58,29 +59,64 @@ parser.add_argument('temp')
 parser.add_argument('humidite')
 parser.add_argument('date')
 
+# MeasureAll
+# GET
+class MeasureAll(Resource):
+    def get(self):
+        #SQL SELECT
+        dbCursor.execute("SELECT id_mesure FROM MESURE")
+        ids=dbCursor.fetchall()
+        MEASURES = []
+        for i in range (1, len(ids) + 1):
+            MEASURES.append({'temp': sql_select_temp(i), 'humidite': sql_select_humid(i), 'date': sql_select_date(i)})
+        return MEASURES
 
 # Measure
 # GET & DELETE & POST
 class MeasureOne(Resource):
     def get(self, measure_id):
-        #SQL SELECT
-        str_mesure = {'temp': sql_select_temp(measure_id), 'humidite': sql_select_humid(measure_id), 'date': sql_select_date(measure_id)}
-        return str_mesure
+        mesure = {'temp': sql_select_temp(measure_id), 'humidite': sql_select_humid(measure_id), 'date': sql_select_date(measure_id)}
+        return mesure
 
     def delete(self, measure_id):
         dbCursor.execute("DELETE FROM 'MESURE' WHERE id_mesure='%d'" % measure_id)
-        # del MEASURES[measure_id] # SQL DELETE
+        
         return '', 204
 
-    def post(self):
+    def post(self, temp, humidity):
         args = parser.parse_args()
-        values = {'temp': args['temp'],'humidite': args['humidite'], 'date': args['date']}
-        # MEASURES[measure_id] = values
-        #SQL INSERT
-        dateNow = datetime.datetime.now
+
+        dateNow = datetime.today()
+        dateNow = dateNow.strftime("%Y-%m-%d %H:%M:%S")
+
+        values = {'temp': args['temp'],'humidite': args['humidite'], 'date': dateNow}
         dbCursor.execute("INSERT INTO MESURE (id_capteur, mesure_date, mesure_temp, mesure_humidite) VALUES (%d, %s, %d, %d)" % (1, dateNow, args['temp'], args['humidite']))
         return values, 201
 
+# MeasureList - which list all measure of last day
+# GET
+class MeasureList(Resource):
+    def get(self):
+        DateNow = datetime.today()
+        DateBefore = DateNow - timedelta(days=1)
+        DateNow = DateNow.strftime("%Y-%m-%d")
+        DateBefore = DateBefore.strftime("%Y-%m-%d")
+
+        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE mesure_date between '%s' and '%s'" %(DateBefore, DateNow))
+        ids=dbCursor.fetchall()
+        MEASURES = []
+        for i in range (1, len(ids) + 1):
+            MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]), 'date': sql_select_date(ids[i - 1])})
+        return MEASURES
+
+class MeasureLast(Resource):
+    def get(self):
+        dbCursor.execute("SELECT id_mesure FROM MESURE ORDER BY id_mesure DESC LIMIT 1")
+        lastId = dbCursor.fetchone()
+        lastId = int(lastId[0])
+        mesure = {'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId), 'date': sql_select_date(lastId)}
+        return mesure
+        
 
 # MeasureDebug
 # GET
@@ -89,42 +125,16 @@ class MeasureDebug(Resource):
         debug = {'temp': sql_select_temp(measure_id), 'humidite': sql_select_humid(measure_id), 'date': sql_select_date(measure_id)}
         return debug
 
-# MeasureList - which list five last measures
-# GET
-class MeasureList(Resource):
-    def get(self):
-        return MEASURES
-
-# Measure
-# GET & DELETE & POST
-class MeasureAll(Resource):
-    def get(self):
-        #SQL SELECT
-        dbCursor.execute("SELECT id_mesure FROM MESURE")
-        ids=dbCursor.fetchall()
-        MEASURES = []
-        for i in range (1, len(ids)):
-            MEASURES.append({'temp': sql_select_temp(i), 'humidite': sql_select_humid(i), 'date': sql_select_date(i)})
-        return MEASURES
-
-
-    def post(self):
-        args = parser.parse_args()
-        values = {'temp': args['temp'],'humidite': args['humidite'], 'date': args['date']}
-        # MEASURES[measure_id] = values
-        #SQL INSERT
-        dateNow = datetime.datetime.now
-        dbCursor.execute("INSERT INTO MESURE (id_capteur, mesure_date, mesure_temp, mesure_humidite) VALUES (%d, %s, %d, %d)" % (1, dateNow, args['temp'], args['humidite']))
-        return values, 201
-
-
 ##
 ## Actually setup the Api resource routing here
 ##
-api.add_resource(MeasureDebug, '/atmos/debug/measure/<measure_id>')
-api.add_resource(MeasureList, '/atmos/measureList/')
-api.add_resource(MeasureOne, '/atmos/measure/<measure_id>')
 api.add_resource(MeasureAll, '/atmos/measure/')
+api.add_resource(MeasureOne, '/atmos/measure/<measure_id>')
+api.add_resource(MeasureList, '/atmos/measureList/')
+api.add_resource(MeasureLast, '/atmos/measureLast/')
+
+
+api.add_resource(MeasureDebug, '/atmos/debug/measure/<measure_id>')
 
 
 if __name__ == '__main__':

@@ -3,9 +3,10 @@
 #################################
 
 import pymysql
-import time
 import json
-import datetime
+import time
+from datetime import datetime
+from datetime import timedelta
 
 atmosDB = pymysql.connect(
     host="192.168.43.57",
@@ -21,19 +22,19 @@ def sql_select_date(id):
     #Date of Measures
     dbCursor.execute("SELECT mesure_date FROM MESURE WHERE id_mesure='%s'" % id)
     date = dbCursor.fetchall()
-    returndate = date#.strftime("%Y-%m-%d %H:%M:%S")
+    returndate = date[0][0].strftime("%Y-%m-%d %H:%M:%S")
     return returndate
 
 def sql_select_temp(id):
     #Temp of Measures
     dbCursor.execute("SELECT mesure_temp FROM MESURE WHERE id_mesure='%s'" % id)
-    temp = json.dumps(dbCursor.fetchall())
+    temp = json.dumps(dbCursor.fetchone())
     return temp
 
 def sql_select_humid(id):
     #Humid of Measures
     dbCursor.execute("SELECT mesure_humidite FROM MESURE WHERE id_mesure='%s'" % id)
-    humid = json.dumps(dbCursor.fetchall())
+    humid = json.dumps(dbCursor.fetchone())
     return humid
 
 def getOne(id):
@@ -41,15 +42,23 @@ def getOne(id):
     print(str_mesure)
 
 def getList():
-    DateNow = datetime.datetime.now()
-    print(DateNow)
-    DateBefore = DateNow - datetime.datetime(year=0, month=0, day=1)
-    print(DateBefore)
+    DateNow = datetime.today()
+    DateBefore = DateNow - timedelta(days=1)
+    DateNow = DateNow.strftime("%Y-%m-%d")
+    DateBefore = DateBefore.strftime("%Y-%m-%d")
+
     dbCursor.execute("SELECT id_mesure FROM MESURE WHERE mesure_date between '%s' and '%s'" %(DateBefore, DateNow))
     ids=dbCursor.fetchall()
     MEASURES = []
-    for i in range (1, len(ids)):
-        MEASURES.append({'temp': sql_select_temp(i), 'humidite': sql_select_humid(i), 'date': sql_select_date(i)})
+    for i in range (1, len(ids) + 1):
+        MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]), 'date': sql_select_date(ids[i - 1])})
     print(MEASURES)
 
-getList()
+def getLast():
+    dbCursor.execute("SELECT id_mesure FROM MESURE ORDER BY id_mesure DESC LIMIT 1")
+    lastId = dbCursor.fetchone()
+    lastId = int(lastId[0])
+    mesure = {'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId), 'date': sql_select_date(lastId)}
+    print(mesure)
+
+getLast()

@@ -1,11 +1,5 @@
 #sensor ESP8206-01 script
 
-#acquire data from esptools?
-
-
-#post data to RASPBERRY
-
-
 import requests as urequests
 import random
 import time
