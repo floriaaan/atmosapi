@@ -28,13 +28,13 @@ def sql_select_date(id):
 def sql_select_temp(id):
     #Temp of Measures
     dbCursor.execute("SELECT mesure_temp FROM MESURE WHERE id_mesure='%s'" % id)
-    temp = json.dumps(dbCursor.fetchone())
+    temp = json.dumps(dbCursor.fetchone()[0])
     return temp
 
 def sql_select_humid(id):
     #Humid of Measures
     dbCursor.execute("SELECT mesure_humidite FROM MESURE WHERE id_mesure='%s'" % id)
-    humid = json.dumps(dbCursor.fetchone())
+    humid = json.dumps(dbCursor.fetchone()[0])
     return humid
 
 def getOne(id):
