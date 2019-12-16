@@ -162,9 +162,9 @@ class ProbePost(Resource):
 ################## PROBES CLASSES ##################
 # ProbePost - inscribe in Database one probe 
 # POST
-class ProbePost(Resource):
+class ProbeDelete(Resource):
     def delete(self, probe_id):
-        dbCursor.execute("DELETE FROM 'SONDE' WHERE id_sonde='%d'" % probe_id)
+        dbCursor.execute("DELETE FROM 'SONDE' WHERE id_sonde=%d" %probe_id)
         
         return '', 204
 
@@ -181,7 +181,7 @@ api.add_resource(MeasureDebug, '/atmos/debug/measure/<measure_id>')
 
 
 api.add_resource(ProbePost, '/atmos/probe/add/<probe_name>+<latitude>+<longitude>+<measure_type>')
-api.add_resource(ProbePost, '/atmos/probe/delete/<probe_id>')
+api.add_resource(ProbeDelete, '/atmos/probe/delete/<probe_id>')
 
 
 if __name__ == '__main__':
