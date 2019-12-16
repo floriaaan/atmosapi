@@ -62,7 +62,10 @@ parser.add_argument('temp')
 parser.add_argument('humidite')
 parser.add_argument('date')
 
-# MeasureAll
+
+
+################# MEASURES CLASSES #################
+# MeasureAll - print all measure of one probe
 # GET
 class MeasureAll(Resource):
     def get(self, probe_id):
@@ -74,8 +77,8 @@ class MeasureAll(Resource):
             MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]), 'date': sql_select_date(ids[i - 1])})
         return MEASURES
 
-# Measure
-# GET & DELETE & POST
+# Measure - print one measure
+# GET & DELETE
 class MeasureOne(Resource):
     def get(self, measure_id):
         mesure = {'temp': sql_select_temp(measure_id), 'humidite': sql_select_humid(measure_id), 'date': sql_select_date(measure_id)}
@@ -86,11 +89,9 @@ class MeasureOne(Resource):
         
         return '', 204
 
-    
-
-# MeasureList - which list all measure of last day
+# MeasureDay - print all measure of last day
 # GET
-class MeasureList(Resource):
+class MeasureDay(Resource):
     def get(self, probe_id):
         DateNow = datetime.today()
         DateBefore = DateNow - timedelta(days=1)
@@ -104,6 +105,8 @@ class MeasureList(Resource):
             MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]), 'date': sql_select_date(ids[i - 1])})
         return MEASURES
 
+# MeasureLast - print last measure of one probe
+# GET
 class MeasureLast(Resource):
     def get(self, probe_id):
         dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = '%d' ORDER BY id_mesure DESC LIMIT 1" %probe_id)
@@ -112,7 +115,7 @@ class MeasureLast(Resource):
         mesure = {'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId), 'date': sql_select_date(lastId)}
         return mesure
         
-# MeasurePost
+# MeasurePost - inscribe in Database one measure 
 # POST
 class MeasurePost(Resource):
     def post(self, temp, humidity, probe_id):
@@ -135,20 +138,51 @@ class MeasureDebug(Resource):
         return debug
 
 
+################## PROBES CLASSES ##################
+# ProbePost - inscribe in Database one probe 
+# POST
+class ProbePost(Resource):
+    def post(self, probe_name, latitude, longitude, measure_type):
 
+
+        values = {'name': probe_name, 'latitude': latitude, 'longitude' : longitude}
+
+        #CREATING PROBE
+        dbCursor.execute("INSERT INTO SONDE (id_utilisateur, sonde_pos_latitude, sonde_pos_longitude, sonde_nom) VALUES (%s, %s, %s, '%s')" % (1, latitude, longitude, probe_name))
+        atmosDB.commit()
+
+        dbCursor.execute("SELECT id_sonde FROM SONDE ORDER BY id_sonde DESC LIMIT 1")
+        lastId = dbCursor.fetchone()
+        lastId = int(lastId[0])
+        #CREATING MEASURE TYPE OF PROBE
+        dbCursor.execute("INSERT INTO CAPTEUR (id_sonde, capteur_mesure, capteur_valeur) VALUES (%d, %s, %d)" % (lastId, measure_type, 0))
+        atmosDB.commit()
+        return values, 201
+
+################## PROBES CLASSES ##################
+# ProbePost - inscribe in Database one probe 
+# POST
+class ProbePost(Resource):
+    def delete(self, probe_id):
+        dbCursor.execute("DELETE FROM 'SONDE' WHERE id_sonde='%d'" % probe_id)
+        
+        return '', 204
 
 ##
 ## Actually setup the Api resource routing here
 ##
 api.add_resource(MeasureAll, '/atmos/measure/<probe_id>')
 api.add_resource(MeasureOne, '/atmos/measure/<measure_id>')
-api.add_resource(MeasureList, '/atmos/measureDay/<probe_id>')
-api.add_resource(MeasureLast, '/atmos/measureLast/<probe_id>')
-api.add_resource(MeasurePost, '/atmos/measureAdd/<probe_id>/<temp>+<humidity>')
-
+api.add_resource(MeasureDay, '/atmos/measure/day/<probe_id>')
+api.add_resource(MeasureLast, '/atmos/measure/last/<probe_id>')
+api.add_resource(MeasurePost, '/atmos/measure/add/<probe_id>/<temp>+<humidity>')
 
 api.add_resource(MeasureDebug, '/atmos/debug/measure/<measure_id>')
 
 
+api.add_resource(ProbePost, '/atmos/probe/add/<probe_name>+<latitude>+<longitude>+<measure_type>')
+api.add_resource(ProbePost, '/atmos/probe/delete/<probe_id>')
+
+
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0")
+    app.run(host="0.0.0.0")
