@@ -112,8 +112,8 @@ class MeasureLast(Resource):
         mesure = {'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId), 'date': sql_select_date(lastId)}
         return mesure
         
-# MeasureDebug
-# GET
+# MeasurePost
+# POST
 class MeasurePost(Resource):
     def post(self, temp, humidity):
 
@@ -121,7 +121,10 @@ class MeasurePost(Resource):
         dateNow = dateNow.strftime("%Y-%m-%d %H:%M:%S")
 
         values = {'temp': temp,'humidite': humidity, 'date': dateNow}
-        dbCursor.execute("INSERT INTO MESURE (id_capteur, mesure_date, mesure_temp, mesure_humidite) VALUES (%d, %s, %d, %d)" % (1, dateNow, temp, humidity))
+
+        
+        dbCursor.execute("INSERT INTO MESURE (id_capteur, mesure_date, mesure_temp, mesure_humidite) VALUES (%d, '%s', %d, %d)" % (1, dateNow, temp, humidity))
+        atmosDB.commit()
         return values, 201
 
 # MeasureDebug
