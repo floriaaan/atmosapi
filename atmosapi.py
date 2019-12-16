@@ -86,15 +86,7 @@ class MeasureOne(Resource):
         
         return '', 204
 
-    def post(self, temp, humidity):
-        args = parser.parse_args()
-
-        dateNow = datetime.today()
-        dateNow = dateNow.strftime("%Y-%m-%d %H:%M:%S")
-
-        values = {'temp': args['temp'],'humidite': args['humidite'], 'date': dateNow}
-        dbCursor.execute("INSERT INTO MESURE (id_capteur, mesure_date, mesure_temp, mesure_humidite) VALUES (%d, %s, %d, %d)" % (1, dateNow, args['temp'], args['humidite']))
-        return values, 201
+    
 
 # MeasureList - which list all measure of last day
 # GET
@@ -120,6 +112,17 @@ class MeasureLast(Resource):
         mesure = {'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId), 'date': sql_select_date(lastId)}
         return mesure
         
+# MeasureDebug
+# GET
+class MeasurePost(Resource):
+    def post(self, temp, humidity):
+
+        dateNow = datetime.today()
+        dateNow = dateNow.strftime("%Y-%m-%d %H:%M:%S")
+
+        values = {'temp': temp,'humidite': humidity, 'date': dateNow}
+        dbCursor.execute("INSERT INTO MESURE (id_capteur, mesure_date, mesure_temp, mesure_humidite) VALUES (%d, %s, %d, %d)" % (1, dateNow, temp, humidity))
+        return values, 201
 
 # MeasureDebug
 # GET
@@ -128,6 +131,9 @@ class MeasureDebug(Resource):
         debug = {'temp': sql_select_temp(measure_id), 'humidite': sql_select_humid(measure_id), 'date': sql_select_date(measure_id)}
         return debug
 
+
+
+
 ##
 ## Actually setup the Api resource routing here
 ##
@@ -135,6 +141,7 @@ api.add_resource(MeasureAll, '/atmos/measure/')
 api.add_resource(MeasureOne, '/atmos/measure/<measure_id>')
 api.add_resource(MeasureList, '/atmos/measureList/')
 api.add_resource(MeasureLast, '/atmos/measureLast/')
+api.add_resource(MeasurePost, '/atmos/measureAdd/<temp>+<humidity>')
 
 
 api.add_resource(MeasureDebug, '/atmos/debug/measure/<measure_id>')
