@@ -70,8 +70,8 @@ class MeasureAll(Resource):
         dbCursor.execute("SELECT id_mesure FROM MESURE")
         ids=dbCursor.fetchall()
         MEASURES = []
-        for i in range (1, len(ids) + 1):
-            MEASURES.append({'temp': sql_select_temp(i), 'humidite': sql_select_humid(i), 'date': sql_select_date(i)})
+        for i in range (1, len(ids)):
+            MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]), 'date': sql_select_date(ids[i - 1])})
         return MEASURES
 
 # Measure
@@ -94,13 +94,13 @@ class MeasureList(Resource):
     def get(self):
         DateNow = datetime.today()
         DateBefore = DateNow - timedelta(days=1)
-        DateNow = DateNow.strftime("%Y-%m-%d")
-        DateBefore = DateBefore.strftime("%Y-%m-%d")
+        DateNow = DateNow.strftime("%Y-%m-%d %H:%M:%S")
+        DateBefore = DateBefore.strftime("%Y-%m-%d %H:%M:%S")
 
         dbCursor.execute("SELECT id_mesure FROM MESURE WHERE mesure_date between '%s' and '%s'" %(DateBefore, DateNow))
         ids=dbCursor.fetchall()
         MEASURES = []
-        for i in range (1, len(ids) + 1):
+        for i in range (1, len(ids)):
             MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]), 'date': sql_select_date(ids[i - 1])})
         return MEASURES
 
