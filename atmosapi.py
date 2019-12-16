@@ -123,7 +123,7 @@ class MeasurePost(Resource):
         values = {'temp': temp,'humidite': humidity, 'date': dateNow}
 
         
-        dbCursor.execute("INSERT INTO MESURE (id_capteur, mesure_date, mesure_temp, mesure_humidite) VALUES (%d, '%s', %d, %d)" % (1, dateNow, temp, humidity))
+        dbCursor.execute("INSERT INTO MESURE (id_capteur, mesure_date, mesure_temp, mesure_humidite) VALUES (%d, '%s', %s, %s)" % (1, dateNow, temp, humidity))
         atmosDB.commit()
         return values, 201
 
