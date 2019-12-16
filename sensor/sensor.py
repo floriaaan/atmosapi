@@ -9,7 +9,7 @@ This script can be used to fake ESP8266 sensor
 """
 
 def http_post(temp, humidity):
-    url = 'http://192.168.43.57:5000/atmos/measureAdd/'+ '1/' + str(temp) + '+' + str(humidity) 
+    url = 'http://192.168.43.57:5000/atmos/measure/add/'+ '1/' + str(temp) + '+' + str(humidity) 
     resp = urequests.post(url)
 
 i=0
