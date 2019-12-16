@@ -65,9 +65,9 @@ parser.add_argument('date')
 # MeasureAll
 # GET
 class MeasureAll(Resource):
-    def get(self):
+    def get(self, probe_id):
         #SQL SELECT
-        dbCursor.execute("SELECT id_mesure FROM MESURE")
+        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur ='%d'" %probe_id)
         ids=dbCursor.fetchall()
         MEASURES = []
         for i in range (1, len(ids)):
@@ -91,13 +91,13 @@ class MeasureOne(Resource):
 # MeasureList - which list all measure of last day
 # GET
 class MeasureList(Resource):
-    def get(self):
+    def get(self, probe_id):
         DateNow = datetime.today()
         DateBefore = DateNow - timedelta(days=1)
         DateNow = DateNow.strftime("%Y-%m-%d %H:%M:%S")
         DateBefore = DateBefore.strftime("%Y-%m-%d %H:%M:%S")
 
-        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE mesure_date between '%s' and '%s'" %(DateBefore, DateNow))
+        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = '%d' mesure_date between '%s' and '%s'" %(probe_id, DateBefore, DateNow))
         ids=dbCursor.fetchall()
         MEASURES = []
         for i in range (1, len(ids)):
@@ -105,8 +105,8 @@ class MeasureList(Resource):
         return MEASURES
 
 class MeasureLast(Resource):
-    def get(self):
-        dbCursor.execute("SELECT id_mesure FROM MESURE ORDER BY id_mesure DESC LIMIT 1")
+    def get(self, probe_id):
+        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = '%d' ORDER BY id_mesure DESC LIMIT 1" %probe_id)
         lastId = dbCursor.fetchone()
         lastId = int(lastId[0])
         mesure = {'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId), 'date': sql_select_date(lastId)}
@@ -115,7 +115,7 @@ class MeasureLast(Resource):
 # MeasurePost
 # POST
 class MeasurePost(Resource):
-    def post(self, temp, humidity):
+    def post(self, temp, humidity, probe_id):
 
         dateNow = datetime.today()
         dateNow = dateNow.strftime("%Y-%m-%d %H:%M:%S")
@@ -123,7 +123,7 @@ class MeasurePost(Resource):
         values = {'temp': temp,'humidite': humidity, 'date': dateNow}
 
         
-        dbCursor.execute("INSERT INTO MESURE (id_capteur, mesure_date, mesure_temp, mesure_humidite) VALUES (%d, '%s', %s, %s)" % (1, dateNow, temp, humidity))
+        dbCursor.execute("INSERT INTO MESURE (id_capteur, mesure_date, mesure_temp, mesure_humidite) VALUES (%s, '%s', %s, %s)" % (probe_id, dateNow, temp, humidity))
         atmosDB.commit()
         return values, 201
 
@@ -140,11 +140,11 @@ class MeasureDebug(Resource):
 ##
 ## Actually setup the Api resource routing here
 ##
-api.add_resource(MeasureAll, '/atmos/measure/')
+api.add_resource(MeasureAll, '/atmos/measure/<probe_id>')
 api.add_resource(MeasureOne, '/atmos/measure/<measure_id>')
-api.add_resource(MeasureList, '/atmos/measureList/')
-api.add_resource(MeasureLast, '/atmos/measureLast/')
-api.add_resource(MeasurePost, '/atmos/measureAdd/<temp>+<humidity>')
+api.add_resource(MeasureList, '/atmos/measureDay/<probe_id>')
+api.add_resource(MeasureLast, '/atmos/measureLast/<probe_id>')
+api.add_resource(MeasurePost, '/atmos/measureAdd/<probe_id>/<temp>+<humidity>')
 
 
 api.add_resource(MeasureDebug, '/atmos/debug/measure/<measure_id>')
