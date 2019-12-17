@@ -187,13 +187,22 @@ class ProbePost(Resource):
         atmosDB.commit()
         return values, 201
 
-# ProbeDelete - delete one probe 
-# DELETE
-class ProbeDelete(Resource):
-    def delete(self, probe_id):
-        #dbCursor.execute("DELETE FROM 'SONDE' WHERE id_sonde=%d" %probe_id) UPDATE disabled 
+# ProbeChangeState - update state of one probe 
+# UPDATE
+class ProbeChangeState(Resource):
+    def update(self, probe_id):
+        dbCursor.execute("SELECT sonde_active FROM SONDE WHERE id_sonde = %s" %probe_id)
+        activity = dbCursor.fetchone()[0]
+
+        if(activity == 1):
+            dbCursor.execute("UPDATE SONDE SET sonde_active = 0 WHERE id_sonde = %s" %probe_id)
+            atmosDB.commit()
+        else: 
+            if(activity == 0):
+                dbCursor.execute("UPDATE SONDE SET sonde_active = 1 WHERE id_sonde = %s" %probe_id)
+                atmosDB.commit()
         
-        return '', 204
+        return 'Updated', 204
 
 ##
 ## Actually setup the Api resource routing here
@@ -208,7 +217,7 @@ api.add_resource(MeasureDebug, '/atmos/debug/measure/<measure_id>')
 
 api.add_resource(ProbeList, '/atmos/probe/')
 api.add_resource(ProbePost, '/atmos/probe/add/<probe_name>+<latitude>+<longitude>+<measure_type>')
-api.add_resource(ProbeDelete, '/atmos/probe/delete/<probe_id>')
+api.add_resource(ProbeChangeState, '/atmos/probe/state/change/<probe_id>')
 
 
 if __name__ == '__main__':

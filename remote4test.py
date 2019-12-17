@@ -93,4 +93,23 @@ def getAllProbes():
         PROBES.append({'user': user, 'pos_x': pos_x, 'pos_y': pos_y, 'name': name, 'active': active})
     print(PROBES)
 
-getAllProbes()
+
+def ChangeState(probe_id):
+    dbCursor.execute("SELECT sonde_active FROM SONDE WHERE id_sonde = %s" %probe_id)
+    activity = dbCursor.fetchone()[0]
+    print(activity)
+
+    if(activity == 1):
+        dbCursor.execute("UPDATE SONDE SET sonde_active = 0 WHERE id_sonde = %s" %probe_id)
+        atmosDB.commit()
+    else: 
+        if(activity == 0):
+            dbCursor.execute("UPDATE SONDE SET sonde_active = 1 WHERE id_sonde = %s" %probe_id)
+            atmosDB.commit()
+
+    dbCursor.execute("SELECT sonde_active FROM SONDE WHERE id_sonde = %s" %probe_id)
+    activity = dbCursor.fetchone()[0]
+    print(activity)
+    
+
+ChangeState(1)
