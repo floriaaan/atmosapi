@@ -206,7 +206,7 @@ api.add_resource(MeasurePost, '/atmos/measure/add/<probe_id>/<temp>+<humidity>')
 
 api.add_resource(MeasureDebug, '/atmos/debug/measure/<measure_id>')
 
-api.add_resource(ProbePost, '/atmos/probe/')
+api.add_resource(ProbeList, '/atmos/probe/')
 api.add_resource(ProbePost, '/atmos/probe/add/<probe_name>+<latitude>+<longitude>+<measure_type>')
 api.add_resource(ProbeDelete, '/atmos/probe/delete/<probe_id>')
 
