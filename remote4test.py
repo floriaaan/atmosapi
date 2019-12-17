@@ -65,8 +65,32 @@ def getAll(probe_id):
     dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = %s" %probe_id)
     ids=dbCursor.fetchall()
     MEASURES = []
-    for i in range (1, len(ids)):
+    for i in range (1, len(ids) + 1):
         MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]), 'date': sql_select_date(ids[i - 1])})
     print(MEASURES)
 
-getAll(1)
+def getAllProbes():
+    dbCursor.execute("SELECT id_sonde FROM SONDE")
+    ids=dbCursor.fetchall()
+    PROBES = []
+    for i in range (1, len(ids) + 1):
+        dbCursor.execute("SELECT id_utilisateur FROM SONDE WHERE id_sonde='%s'" % i)
+        user = json.dumps(dbCursor.fetchone()[0])
+
+        dbCursor.execute("SELECT sonde_pos_latitude FROM SONDE WHERE id_sonde='%s'" % i)
+        pos_x = json.dumps(dbCursor.fetchone()[0])
+
+        dbCursor.execute("SELECT sonde_pos_longitude FROM SONDE WHERE id_sonde='%s'" % i)
+        pos_y = json.dumps(dbCursor.fetchone()[0])
+
+        dbCursor.execute("SELECT sonde_nom FROM SONDE WHERE id_sonde='%s'" % i)
+        name = json.dumps(dbCursor.fetchone()[0])
+
+        dbCursor.execute("SELECT sonde_active FROM SONDE WHERE id_sonde='%s'" % i)
+        active = json.dumps(dbCursor.fetchone()[0])
+
+
+        PROBES.append({'user': user, 'pos_x': pos_x, 'pos_y': pos_y, 'name': name, 'active': active})
+    print(PROBES)
+
+getAllProbes()

@@ -73,7 +73,7 @@ class MeasureAll(Resource):
         dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = %s" %probe_id)
         ids=dbCursor.fetchall()
         MEASURES = []
-        for i in range (1, len(ids)):
+        for i in range (1, len(ids) + 1):
             MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]), 'date': sql_select_date(ids[i - 1])})
         return MEASURES
 
@@ -146,8 +146,8 @@ class ProbeList(Resource):
         dbCursor.execute("SELECT id_sonde FROM SONDE")
         ids=dbCursor.fetchall()
         PROBES = []
-        for i in range (1, len(ids)):
-            dbCursor.execute("SELECT id_utilsateur FROM SONDE WHERE id_sonde='%s'" % i)
+        for i in range (1, len(ids) + 1):
+            dbCursor.execute("SELECT id_utilisateur FROM SONDE WHERE id_sonde='%s'" % i)
             user = json.dumps(dbCursor.fetchone()[0])
 
             dbCursor.execute("SELECT sonde_pos_latitude FROM SONDE WHERE id_sonde='%s'" % i)
