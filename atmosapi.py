@@ -70,7 +70,7 @@ parser.add_argument('date')
 class MeasureAll(Resource):
     def get(self, probe_id):
         #SQL SELECT
-        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur ='%d'" %probe_id)
+        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = %s" %probe_id)
         ids=dbCursor.fetchall()
         MEASURES = []
         for i in range (1, len(ids)):
@@ -85,7 +85,7 @@ class MeasureOne(Resource):
         return mesure
 
     def delete(self, measure_id):
-        dbCursor.execute("DELETE FROM 'MESURE' WHERE id_mesure='%d'" % measure_id)
+        dbCursor.execute("DELETE FROM 'MESURE' WHERE id_mesure= %d" % measure_id)
         
         return '', 204
 
@@ -98,7 +98,7 @@ class MeasureDay(Resource):
         DateNow = DateNow.strftime("%Y-%m-%d %H:%M:%S")
         DateBefore = DateBefore.strftime("%Y-%m-%d %H:%M:%S")
 
-        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = '%d' mesure_date between '%s' and '%s'" %(probe_id, DateBefore, DateNow))
+        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = %s and mesure_date between '%s' and '%s'" %(probe_id, DateBefore, DateNow))
         ids=dbCursor.fetchall()
         MEASURES = []
         for i in range (1, len(ids)):
@@ -109,7 +109,7 @@ class MeasureDay(Resource):
 # GET
 class MeasureLast(Resource):
     def get(self, probe_id):
-        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = '%d' ORDER BY id_mesure DESC LIMIT 1" %probe_id)
+        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = %s ORDER BY id_mesure DESC LIMIT 1" %probe_id)
         lastId = dbCursor.fetchone()
         lastId = int(lastId[0])
         mesure = {'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId), 'date': sql_select_date(lastId)}
@@ -139,6 +139,34 @@ class MeasureDebug(Resource):
 
 
 ################## PROBES CLASSES ##################
+# ProbeList - list all probes 
+# GET
+class ProbeList(Resource):
+    def get(self):
+        dbCursor.execute("SELECT id_sonde FROM SONDE")
+        ids=dbCursor.fetchall()
+        PROBES = []
+        for i in range (1, len(ids)):
+            dbCursor.execute("SELECT id_utilsateur FROM SONDE WHERE id_mesure='%s'" % i)
+            user = json.dumps(dbCursor.fetchone()[0])
+
+            dbCursor.execute("SELECT sonde_pos_latitude FROM SONDE WHERE id_mesure='%s'" % i)
+            pos_x = json.dumps(dbCursor.fetchone()[0])
+
+            dbCursor.execute("SELECT sonde_pos_longitude FROM SONDE WHERE id_mesure='%s'" % i)
+            pos_y = json.dumps(dbCursor.fetchone()[0])
+
+            dbCursor.execute("SELECT sonde_nom FROM SONDE WHERE id_mesure='%s'" % i)
+            name = json.dumps(dbCursor.fetchone()[0])
+
+            dbCursor.execute("SELECT sonde_active FROM SONDE WHERE id_mesure='%s'" % i)
+            active = json.dumps(dbCursor.fetchone()[0])
+
+
+            PROBES.append({'user': user, 'pos_x': pos_x, 'pos_y': pos_y, 'name': name, 'active': active})
+        
+        return PROBES, 200
+
 # ProbePost - inscribe in Database one probe 
 # POST
 class ProbePost(Resource):
@@ -148,7 +176,7 @@ class ProbePost(Resource):
         values = {'name': probe_name, 'latitude': latitude, 'longitude' : longitude}
 
         #CREATING PROBE
-        dbCursor.execute("INSERT INTO SONDE (id_utilisateur, sonde_pos_latitude, sonde_pos_longitude, sonde_nom) VALUES (%s, %s, %s, '%s')" % (1, latitude, longitude, probe_name))
+        dbCursor.execute("INSERT INTO SONDE (id_utilisateur, sonde_pos_latitude, sonde_pos_longitude, sonde_nom, sonde_active) VALUES (%s, %s, %s, '%s', 1)" % (1, latitude, longitude, probe_name))
         atmosDB.commit()
 
         dbCursor.execute("SELECT id_sonde FROM SONDE ORDER BY id_sonde DESC LIMIT 1")
@@ -159,12 +187,11 @@ class ProbePost(Resource):
         atmosDB.commit()
         return values, 201
 
-################## PROBES CLASSES ##################
-# ProbePost - inscribe in Database one probe 
-# POST
+# ProbeDelete - delete one probe 
+# DELETE
 class ProbeDelete(Resource):
     def delete(self, probe_id):
-        dbCursor.execute("DELETE FROM 'SONDE' WHERE id_sonde=%d" %probe_id)
+        #dbCursor.execute("DELETE FROM 'SONDE' WHERE id_sonde=%d" %probe_id) UPDATE disabled 
         
         return '', 204
 
@@ -179,7 +206,7 @@ api.add_resource(MeasurePost, '/atmos/measure/add/<probe_id>/<temp>+<humidity>')
 
 api.add_resource(MeasureDebug, '/atmos/debug/measure/<measure_id>')
 
-
+api.add_resource(ProbePost, '/atmos/probe/')
 api.add_resource(ProbePost, '/atmos/probe/add/<probe_name>+<latitude>+<longitude>+<measure_type>')
 api.add_resource(ProbeDelete, '/atmos/probe/delete/<probe_id>')
 

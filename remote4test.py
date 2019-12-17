@@ -41,36 +41,32 @@ def getOne(id):
     str_mesure = {'temp': sql_select_temp(id), 'humidite': sql_select_humid(id), 'date': sql_select_date(id)}
     print(str_mesure)
 
-def getList():
+def getList(probe_id):
     DateNow = datetime.today()
-    
     DateBefore = DateNow - timedelta(days=1)
     DateNow = DateNow.strftime("%Y-%m-%d %H:%M:%S")
     DateBefore = DateBefore.strftime("%Y-%m-%d %H:%M:%S")
 
-    print(DateBefore)
-    print(DateNow)
-
-    dbCursor.execute("SELECT id_mesure FROM MESURE WHERE mesure_date between '%s' and '%s'" %(DateBefore, DateNow))
+    dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = %s and mesure_date between '%s' and '%s'" %(probe_id, DateBefore, DateNow))
     ids=dbCursor.fetchall()
     MEASURES = []
     for i in range (1, len(ids)):
         MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]), 'date': sql_select_date(ids[i - 1])})
     print(MEASURES)
 
-def getLast():
-    dbCursor.execute("SELECT id_mesure FROM MESURE ORDER BY id_mesure DESC LIMIT 1")
+def getLast(probe_id):
+    dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = %s ORDER BY id_mesure DESC LIMIT 1" %probe_id)
     lastId = dbCursor.fetchone()
     lastId = int(lastId[0])
     mesure = {'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId), 'date': sql_select_date(lastId)}
     print(mesure)
 
-def getAll():
-    dbCursor.execute("SELECT id_mesure FROM MESURE")
+def getAll(probe_id):
+    dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = %s" %probe_id)
     ids=dbCursor.fetchall()
     MEASURES = []
     for i in range (1, len(ids)):
-        MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]), 'date': sql_select_date(ids[i])})
+        MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]), 'date': sql_select_date(ids[i - 1])})
     print(MEASURES)
 
-getAll()
+getAll(1)

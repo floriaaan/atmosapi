@@ -1,3 +1,16 @@
+import pymysql
+
+atmosDB = pymysql.connect(
+    host="localhost",
+    user="atmos",
+    passwd="atmos",
+    charset="utf8"
+)
+
+dbCursor = atmosDB.cursor()
+
+dbCursor.execute("CREATE DATABASE atmos")
+
 INSERT INTO UTILISATEUR (utilisateur_pseudo, utilisateur_email, utilisateur_mdp) VALUES ('atmos_admin', 'atmosfrcontact@gmail.com', 'atmos')
 INSERT INTO SONDE (id_utilisateur, sonde_pos_latitude, sonde_pos_longitude, sonde_nom) VALUES (1, 49.477, 1.091, 'prototype')
 INSERT INTO CAPTEUR (id_sonde, capteur_mesure, capteur_valeur) VALUES ( 1, 'ESP8266', 0)
