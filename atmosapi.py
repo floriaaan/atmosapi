@@ -147,19 +147,19 @@ class ProbeList(Resource):
         ids=dbCursor.fetchall()
         PROBES = []
         for i in range (1, len(ids)):
-            dbCursor.execute("SELECT id_utilsateur FROM SONDE WHERE id_mesure='%s'" % i)
+            dbCursor.execute("SELECT id_utilsateur FROM SONDE WHERE id_sonde='%s'" % i)
             user = json.dumps(dbCursor.fetchone()[0])
 
-            dbCursor.execute("SELECT sonde_pos_latitude FROM SONDE WHERE id_mesure='%s'" % i)
+            dbCursor.execute("SELECT sonde_pos_latitude FROM SONDE WHERE id_sonde='%s'" % i)
             pos_x = json.dumps(dbCursor.fetchone()[0])
 
-            dbCursor.execute("SELECT sonde_pos_longitude FROM SONDE WHERE id_mesure='%s'" % i)
+            dbCursor.execute("SELECT sonde_pos_longitude FROM SONDE WHERE id_sonde='%s'" % i)
             pos_y = json.dumps(dbCursor.fetchone()[0])
 
-            dbCursor.execute("SELECT sonde_nom FROM SONDE WHERE id_mesure='%s'" % i)
+            dbCursor.execute("SELECT sonde_nom FROM SONDE WHERE id_sonde='%s'" % i)
             name = json.dumps(dbCursor.fetchone()[0])
 
-            dbCursor.execute("SELECT sonde_active FROM SONDE WHERE id_mesure='%s'" % i)
+            dbCursor.execute("SELECT sonde_active FROM SONDE WHERE id_sonde='%s'" % i)
             active = json.dumps(dbCursor.fetchone()[0])
 
 
