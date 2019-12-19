@@ -37,7 +37,8 @@ Coté client
 ```
 unzip atmoshome.zip
 Remplacer tout les '192.168.43.57' par :
--   Soit l'adresse IP du Raspberry si vous hébergez la Web App sur un autre serveur (requis: le serveur doit être connecté au même wifi que le Raspberry et le capteur)
+-   Soit l'adresse IP du Raspberry si vous hébergez la Web App sur un autre serveur 
+        (requis: le serveur doit être connecté au même wifi que le Raspberry et le capteur)
 -   Soit localhost ou 127.0.0.1 si vous hébergez la Web App sur le Raspberry Pi
 
 ```
