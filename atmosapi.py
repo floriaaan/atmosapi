@@ -8,6 +8,7 @@ from datetime import datetime
 from datetime import timedelta
 import json
 from flask_cors import CORS, cross_origin
+from flask_swagger_ui import get_swaggerui_blueprint
 
 atmosDB = pymysql.connect(
     host="127.0.0.1",
@@ -188,9 +189,9 @@ class ProbePost(Resource):
         return values, 201
 
 # ProbeChangeState - update state of one probe 
-# UPDATE
+# put
 class ProbeChangeState(Resource):
-    def update(self, probe_id):
+    def put(self, probe_id):
         dbCursor.execute("SELECT sonde_active FROM SONDE WHERE id_sonde = %s" %probe_id)
         activity = dbCursor.fetchone()[0]
 
@@ -202,7 +203,7 @@ class ProbeChangeState(Resource):
                 dbCursor.execute("UPDATE SONDE SET sonde_active = 1 WHERE id_sonde = %s" %probe_id)
                 atmosDB.commit()
         
-        return 'Updated', 204
+        return 'Updated', 200
 
 ##
 ## Actually setup the Api resource routing here

@@ -1,10 +1,8 @@
 /*==============================================================*/
 /* Nom de SGBD :  MySQL 5.0                                     */
-/* Date de création :  09/12/2019 11:25:40                      */
+/* Date de crÃ©ation :  16/12/2019 19:30:40                      */
 /*==============================================================*/
 
-
-drop table if exists CAPTEUR;
 
 drop table if exists MESURE;
 
@@ -13,24 +11,12 @@ drop table if exists SONDE;
 drop table if exists UTILISATEUR;
 
 /*==============================================================*/
-/* Table : CAPTEUR                                              */
-/*==============================================================*/
-create table CAPTEUR
-(
-   ID_CAPTEUR           int not null auto_increment,
-   ID_SONDE             int not null,
-   CAPTEUR_MESURE       longtext,
-   CAPTEUR_VALEUR       float,
-   primary key (ID_CAPTEUR)
-);
-
-/*==============================================================*/
 /* Table : MESURE                                               */
 /*==============================================================*/
 create table MESURE
 (
    ID_MESURE            int not null auto_increment,
-   ID_CAPTEUR           int not null,
+   ID_SONDE             int not null,
    MESURE_DATE          datetime,
    MESURE_TEMP          float,
    MESURE_HUMIDITE      float,
@@ -47,6 +33,7 @@ create table SONDE
    SONDE_POS_LATITUDE   double,
    SONDE_POS_LONGITUDE  double,
    SONDE_NOM            varchar(40),
+   SONDE_ACTIVE         bool not null,
    primary key (ID_SONDE)
 );
 
@@ -62,12 +49,9 @@ create table UTILISATEUR
    primary key (ID_UTILISATEUR)
 );
 
-alter table CAPTEUR add constraint FK_AVOIR foreign key (ID_SONDE)
+alter table MESURE add constraint FK_REALISER foreign key (ID_SONDE)
       references SONDE (ID_SONDE) on delete restrict on update restrict;
 
-alter table MESURE add constraint FK_REALISER foreign key (ID_CAPTEUR)
-      references CAPTEUR (ID_CAPTEUR) on delete restrict on update restrict;
-
-alter table SONDE add constraint FK_ASSOCIATION_3 foreign key (ID_UTILISATEUR)
+alter table SONDE add constraint FK_AVOIR foreign key (ID_UTILISATEUR)
       references UTILISATEUR (ID_UTILISATEUR) on delete restrict on update restrict;
 
