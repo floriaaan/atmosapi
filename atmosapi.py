@@ -71,7 +71,7 @@ parser.add_argument('date')
 class MeasureAll(Resource):
     def get(self, probe_id):
         #SQL SELECT
-        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = %s" %probe_id)
+        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s" %probe_id)
         ids=dbCursor.fetchall()
         MEASURES = []
         for i in range (1, len(ids) + 1):
@@ -99,7 +99,7 @@ class MeasureDay(Resource):
         DateNow = DateNow.strftime("%Y-%m-%d %H:%M:%S")
         DateBefore = DateBefore.strftime("%Y-%m-%d %H:%M:%S")
 
-        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = %s and mesure_date between '%s' and '%s'" %(probe_id, DateBefore, DateNow))
+        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s and mesure_date between '%s' and '%s'" %(probe_id, DateBefore, DateNow))
         ids=dbCursor.fetchall()
         MEASURES = []
         for i in range (1, len(ids)):
@@ -110,7 +110,7 @@ class MeasureDay(Resource):
 # GET
 class MeasureLast(Resource):
     def get(self, probe_id):
-        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_capteur = %s ORDER BY id_mesure DESC LIMIT 1" %probe_id)
+        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s ORDER BY id_mesure DESC LIMIT 1" %probe_id)
         lastId = dbCursor.fetchone()
         lastId = int(lastId[0])
         mesure = {'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId), 'date': sql_select_date(lastId)}
@@ -183,9 +183,7 @@ class ProbePost(Resource):
         dbCursor.execute("SELECT id_sonde FROM SONDE ORDER BY id_sonde DESC LIMIT 1")
         lastId = dbCursor.fetchone()
         lastId = int(lastId[0])
-        #CREATING MEASURE TYPE OF PROBE
-        dbCursor.execute("INSERT INTO CAPTEUR (id_sonde, capteur_mesure, capteur_valeur) VALUES (%d, %s, %d)" % (lastId, measure_type, 0))
-        atmosDB.commit()
+        
         return values, 201
 
 # ProbeChangeState - update state of one probe 
