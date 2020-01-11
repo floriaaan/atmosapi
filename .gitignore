@@ -1,4 +1,5 @@
 atmos.code-workspace
 .vscode/
 .dist/
+.idea/
 docs/
