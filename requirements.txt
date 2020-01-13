@@ -1,0 +1,4 @@
+Flask
+Flask-RestPlus
+PyMySQL
+gunicorn
