@@ -15,9 +15,6 @@ i2C_l = I2C(scl=Pin(2), sda=Pin(0))
 temp_sensor = si7021.Si7021(i2C_c)
 lcd = I2cLcd(i2C_l, DEFAULT_I2C_ADDR, 2, 16)
 
-"""
-This script can be used to fake ESP8266 sensor
-"""
 
 def http_post(probe_id, temp, humidity):
     url = 'http://192.168.43.57:5000/atmos/measure/add/'+ str(probe_id) +'/' + str(temp) + '+' + str(humidity) 

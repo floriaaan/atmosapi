@@ -1,8 +1,8 @@
-#################################
-#           SQL Part            #
-#################################
-
 import pymysql
+from flask import Flask
+from flask_restplus import reqparse, Api, Resource
+from flask_cors import CORS
+
 from datetime import datetime
 from datetime import timedelta
 import json
@@ -38,18 +38,19 @@ def sql_select_humid(id):
     return humid
 
 
-#################################
-#           API Part            #
-#################################
-
-
-from flask import Flask
-from flask_restplus import reqparse, abort, Api, Resource
-from flask_cors import CORS
-from flask_swagger_ui import get_swaggerui_blueprint
 
 app = Flask(__name__)
-api = Api(app=app, version="1.0", doc="/atmos/api", title="AtmosApi", description="Api de gestion de l'AtmosBase", default="AtmosApi", default_label='AtmosApi', validate=True)
+api = Api(app=app,
+          version="1.0",
+          doc="/atmos/api",
+          title="AtmosApi",
+          default="AtmosAPI",
+          default_label="API de l'AtmosBase",
+          contact="Florian Leroux",
+          contact_email="florian.leroux@viacesi.fr",
+          contact_url="https://github.com/floriaaan/",
+          description="Actions related to interactions with AtmosBase",
+          validate=True)
 cors = CORS(app)
 
 parser = reqparse.RequestParser()
@@ -57,9 +58,15 @@ parser.add_argument('temp')
 parser.add_argument('humidite')
 parser.add_argument('date')
 
+
+ns_measure = api.namespace('Measures', description= "Actions related to measures", path="/")
+
 ################# MEASURES CLASSES #################
-@api.route("/atmos/measure/<probe_id>")
+@ns_measure.route("/atmos/measure/<probe_id>")
 class MeasureAll(Resource):
+    @api.response(200, 'Measures : Measures obtained')
+    @api.response(400, 'Measures : Error')
+    @api.response(403, 'Measures : Error, forbidden access')
     def get(self, probe_id):
         """
         Print all measure of one probe
@@ -72,10 +79,13 @@ class MeasureAll(Resource):
         for i in range(1, len(ids) + 1):
             MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]),
                              'date': sql_select_date(ids[i - 1])})
-        return MEASURES
+        return MEASURES, 200
 
-@api.route("/atmos/measure/<measure_id>")
+@ns_measure.route("/atmos/measure/<measure_id>")
 class MeasureOne(Resource):
+    @api.response(200, 'Measure : Measure obtained')
+    @api.response(400, 'Measure : Error')
+    @api.response(403, 'Measure : Error, forbidden access')
     def get(self, measure_id):
         """
         Print one measure
@@ -84,21 +94,31 @@ class MeasureOne(Resource):
         """
         mesure = {'temp': sql_select_temp(measure_id), 'humidite': sql_select_humid(measure_id),
                   'date': sql_select_date(measure_id)}
-        return mesure
+        return mesure, 200
 
+    @api.response(204, 'Measure : Measure deleted')
+    @api.response(400, 'Measure : Error')
+    @api.response(403, 'Measure : Error, forbidden access')
     def delete(self, measure_id):
         """
         Delete one measure
         :param measure_id:
         :return:
         """
-        dbCursor.execute("DELETE FROM 'MESURE' WHERE id_mesure= %d" % measure_id)
+        dbCursor.execute("DELETE FROM MESURE WHERE id_mesure= %s" % measure_id)
+        dbCursor.execute("SET @num := 0")
+        dbCursor.execute("UPDATE MESURE SET id_mesure = @num := (@num+1)")
+        dbCursor.execute("ALTER TABLE MESURE AUTO_INCREMENT = 1")
+
+        atmosDB.commit()
 
         return '', 204
 
-
-@api.route("/atmos/measure/day/<probe_id>")
+@ns_measure.route("/atmos/measure/day/<probe_id>")
 class MeasureDay(Resource):
+    @api.response(200, 'Measures : Day\'s values obtained')
+    @api.response(400, 'Measures : Error')
+    @api.response(403, 'Measures : Error, forbidden access')
     def get(self, probe_id):
         """
         Print all measure of last day
@@ -117,10 +137,13 @@ class MeasureDay(Resource):
         for i in range(1, len(ids)):
             MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]),
                              'date': sql_select_date(ids[i - 1])})
-        return MEASURES
+        return MEASURES, 200
 
-@api.route("/atmos/measure/last/<probe_id>")
+@ns_measure.route("/atmos/measure/last/<probe_id>")
 class MeasureLast(Resource):
+    @api.response(200, 'Measure : Measure obtained')
+    @api.response(400, 'Measure : Error')
+    @api.response(403, 'Measure : Error, forbidden access')
     def get(self, probe_id):
         """
         Print last measure of one probe
@@ -133,11 +156,14 @@ class MeasureLast(Resource):
         lastId = int(lastId[0])
         mesure = {'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId),
                   'date': sql_select_date(lastId)}
-        return mesure
+        return mesure, 200
 
-@api.route("/atmos/measure/add/<probe_id>/<temp>+<humidity>")
+@ns_measure.route("/atmos/measure/add/")
 class MeasurePost(Resource):
-    def post(self, temp, humidity, probe_id):
+    @api.response(201, 'Measure : Measure added')
+    @api.response(400, 'Measure : Error')
+    @api.response(403, 'Measure : Error, forbidden access')
+    def post(self):
         """
         Add one measure in Database
         :param temp:
@@ -145,21 +171,30 @@ class MeasurePost(Resource):
         :param probe_id:
         :return:
         """
+        probe_id = api.payload['probe_id']
+        temp = api.payload['temp']
+        humidity = api.payload['humidity']
+
+
         dateNow = datetime.today()
         dateNow = dateNow.strftime("%Y-%m-%d %H:%M:%S")
 
         values = {'temp': temp, 'humidite': humidity, 'date': dateNow}
 
         dbCursor.execute(
-            "INSERT INTO MESURE (id_sonde, mesure_date, mesure_temp, mesure_humidite) VALUES (%s, '%s', %s, %s)" % (
-                probe_id, dateNow, temp, humidity))
+            "INSERT INTO MESURE (id_sonde, mesure_date, mesure_temp, mesure_humidite) VALUES (%s, '%s', %s, %s)"
+            % (probe_id, dateNow, temp, humidity))
         atmosDB.commit()
         return values, 201
 
+ns_probe = api.namespace('Probes', description= "Actions related to probes", path="/")
 
 ################## PROBES CLASSES ##################
-@api.route("/atmos/probe/")
+@ns_probe.route("/atmos/probe/")
 class ProbeList(Resource):
+    @api.response(200, 'Probes : List of all probes obtained')
+    @api.response(400, 'Probes : Error')
+    @api.response(403, 'Probes : Error, forbidden access')
     def get(self):
         """
         List all probes
@@ -188,17 +223,23 @@ class ProbeList(Resource):
 
         return PROBES, 200
 
-@api.route("/atmos/probe/add/<probe_name>+<latitude>+<longitude>+<measure_type>")
+@ns_probe.route("/atmos/probe/add/")
 class ProbePost(Resource):
-    def post(self, probe_name, latitude, longitude, measure_type):
+    @api.response(201, 'Probe : Probe added')
+    @api.response(400, 'Probe : Error')
+    @api.response(403, 'Probe : Error, forbidden access')
+    def post(self):
         """
         Add a probe in Database
         :param probe_name:
         :param latitude:
         :param longitude:
-        :param measure_type:
         :return:
         """
+        probe_name = api.payload['probe_name']
+        latitude = api.payload['latitude']
+        longitude = api.payload['longitude']
+
         values = {'name': probe_name, 'latitude': latitude, 'longitude': longitude}
 
         dbCursor.execute(
@@ -207,14 +248,14 @@ class ProbePost(Resource):
                 1, latitude, longitude, probe_name))
         atmosDB.commit()
 
-        dbCursor.execute("SELECT id_sonde FROM SONDE ORDER BY id_sonde DESC LIMIT 1")
-        lastId = dbCursor.fetchone()
-        lastId = int(lastId[0])
 
         return values, 201
 
-@api.route("/atmos/probe/state/change/<probe_id>")
+@ns_probe.route("/atmos/probe/state/change/<probe_id>")
 class ProbeChangeState(Resource):
+    @api.response(200, 'Probe : State of probe changed')
+    @api.response(400, 'Probe : Error')
+    @api.response(403, 'Probe : Erreur, forbidden access')
     def put(self, probe_id):
         """
         Change state of one probe (active or not)
@@ -232,21 +273,8 @@ class ProbeChangeState(Resource):
                 dbCursor.execute("UPDATE SONDE SET sonde_active = 1 WHERE id_sonde = %s" % probe_id)
                 atmosDB.commit()
 
-        return 'Updated', 200
+        return 'State changed', 200
 
-
-##
-# Actually setup the Api resource routing here
-##
-api.add_resource(MeasureAll, '/atmos/measure/<probe_id>')
-api.add_resource(MeasureOne, '/atmos/measure/<measure_id>')
-api.add_resource(MeasureDay, '/atmos/measure/day/<probe_id>')
-api.add_resource(MeasureLast, '/atmos/measure/last/<probe_id>')
-api.add_resource(MeasurePost, '/atmos/measure/add/<probe_id>/<temp>+<humidity>')
-
-api.add_resource(ProbeList, '/atmos/probe/')
-api.add_resource(ProbePost, '/atmos/probe/add/<probe_name>+<latitude>+<longitude>+<measure_type>')
-api.add_resource(ProbeChangeState, '/atmos/probe/state/change/<probe_id>')
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0")
