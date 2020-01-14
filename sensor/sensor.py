@@ -17,8 +17,16 @@ lcd = I2cLcd(i2C_l, DEFAULT_I2C_ADDR, 2, 16)
 
 
 def http_post(probe_id, temp, humidity):
-    url = 'http://192.168.43.57:5000/atmos/measure/add/'+ str(probe_id) +'/' + str(temp) + '+' + str(humidity) 
-    resp = urequests.post(url)
+    url = 'http://localhost:5000/atmos/measure/add/'
+    data = {
+        'probe_id' : probe_id,
+        'temp' : temp,
+        'humidity' : humidity
+    }
+    headers = {
+        'charset': 'utf-8'
+    }
+    resp = urequests.post(url, json=data, headers=headers)
 
 def moyenneTemp():
     var1 = temp_sensor.temperature
@@ -59,19 +67,32 @@ def moyenneHumid():
 
 def sensor_dispsend():
     while True:
-    
-        moy_temp = moyenneTemp()
-        moy_humi = moyenneHumid()
-    
-        http_post(1, moy_temp, moy_humi)
-    
-        time.sleep(1)
+        try:
+            moy_temp = moyenneTemp()
+            moy_humi = moyenneHumid()
+
+            http_post(1, moy_temp, moy_humi)
+        except KeyboardInterrupt:
+            lcd.putstr("KeyboardInterrupt!")
+            exit()
+        except:
+            print("!!!ERROR!!!")
+            lcd.putstr("!!!ERROR!!!")
+
+        time.sleep(10)
     
 def sensor_disp():
     while True:
-        
-        moy_temp = moyenneTemp()
-        moy_humi = moyenneHumid()
+        try:
+            moy_temp = moyenneTemp()
+            moy_humi = moyenneHumid()
+
+        except KeyboardInterrupt:
+            lcd.putstr("KeyboardInterrupt!")
+            exit()
+        except:
+            print("!!!ERROR!!!")
+            lcd.putstr("!!!ERROR!!!")
         
         time.sleep(3)
         

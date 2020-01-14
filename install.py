@@ -11,10 +11,10 @@ DB = pymysql.connect(
 dbCursor = DB.cursor()
 
 dbCursor.execute("CREATE DATABASE atmos")
-DB.commit
+DB.commit()
 DB.close()
 
-os.system("mysql -u atmos -p atmos < generate_Atmosfr.sql")
+os.system("mysql -u atmos -patmos atmos < generate_Atmosfr.sql")
 
 atmosDB = pymysql.connect(
     host="localhost",
