@@ -29,6 +29,7 @@ def sql_select_date(id):
         return returndate
     except:
         print("exception!")
+        return None
 
 
 def sql_select_temp(id):
@@ -38,6 +39,7 @@ def sql_select_temp(id):
         return temp
     except:
         print("exception!")
+        return None
 
 
 def sql_select_humid(id):
@@ -47,6 +49,7 @@ def sql_select_humid(id):
         return humid
     except:
         print("exception!")
+        return None
 
 
 
@@ -75,7 +78,7 @@ parser.add_argument('date')
 ns_measure = api.namespace('Measures', description= "Actions related to measures", path="/")
 
 ################# MEASURES CLASSES #################
-@ns_measure.route("/atmos/measure/<probe_id>")
+@ns_measure.route("/atmos/measure/<int:probe_id>")
 class MeasureAll(Resource):
     @api.response(200, 'Measures : Measures obtained')
     @api.response(400, 'Measures : Error')
@@ -98,7 +101,7 @@ class MeasureAll(Resource):
             MEASURES = {'probe_id': probe_id, 'error' : {'flag': True, 'type' : json.dumps(str(e))}}
         return MEASURES, 200
 
-@ns_measure.route("/atmos/measure/<measure_id>")
+@ns_measure.route("/atmos/measure/one/<int:measure_id>")
 class MeasureOne(Resource):
     @api.response(200, 'Measure : Measure obtained')
     @api.response(400, 'Measure : Error')
@@ -109,6 +112,7 @@ class MeasureOne(Resource):
         :param measure_id:
         :return:
         """
+        mesure = {}
         try:
             mesure = {'measure_id' : measure_id, 'temp': sql_select_temp(measure_id), 'humidite': sql_select_humid(measure_id),
                       'date': sql_select_date(measure_id), 'error': {'flag': False}}
@@ -156,16 +160,15 @@ class MeasureDay(Resource):
         DateBefore = DateBefore.strftime("%Y-%m-%d %H:%M:%S")
 
         MEASURES = []
-        try:
-            dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s and mesure_date between '%s' and '%s'" % (
-                probe_id, DateBefore, DateNow))
-            ids = dbCursor.fetchall()
 
-            for i in range(1, len(ids)):
-                MEASURES.append({'probe_id' : probe_id, 'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]),
-                                 'date': sql_select_date(ids[i - 1]), 'error' : {'flag': False}})
-        except Exception as e:
-            return {'probe_id': probe_id, 'error' : {'flag': True, 'type' : json.dumps(str(e))}}
+        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s and mesure_date between '%s' and '%s'" % (
+            probe_id, DateBefore, DateNow))
+        ids = dbCursor.fetchall()
+
+        for i in range(0, len(ids)):
+            MEASURES.append({'probe_id' : probe_id, 'temp': sql_select_temp(ids[i]), 'humidite': sql_select_humid(ids[i]),
+                             'date': sql_select_date(ids[i]), 'error' : {'flag': False}})
+
         return MEASURES, 200
 
 @ns_measure.route("/atmos/measure/last/<probe_id>")
@@ -201,23 +204,26 @@ class MeasureLastAllProbes(Resource):
         Print last measure of all probe
         :return:
         """
-        try:
-            dbCursor.execute("SELECT id_sonde FROM SONDE")
-            ids = dbCursor.fetchall()
-        except Exception as e:
-            return {'error' : json.dumps(str(e))}, 400
+
+        dbCursor.execute("SELECT id_sonde FROM SONDE")
+        ids = dbCursor.fetchall()
+
 
 
         MEASURES = []
-        for i in range(1, len(ids)):
-            try:
-                dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s ORDER BY id_mesure DESC LIMIT 1" % ids[i])
-                lastId = dbCursor.fetchone()
+        for i in range(0, len(ids)):
+
+
+            dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s ORDER BY id_mesure DESC LIMIT 1" % ids[i])
+            lastId = dbCursor.fetchone()
+
+            if(lastId != None):
                 lastId = int(lastId[0])
                 MEASURES.append({'probe_id' : i,'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId),
-                                 'date': sql_select_date(lastId), 'error': {'flag': False}})
-            except Exception as e:
-                MEASURES.append({'probe_id' : i, 'error' : {'flag': True, 'type' : json.dumps(str(e))}})
+                                         'date': sql_select_date(lastId), 'error': {'flag': False}})
+            else:
+                MEASURES.append({'probe_id' : i, 'error': {'flag': True}})
+
 
 
         return MEASURES, 200
@@ -309,8 +315,8 @@ class ProbeList(Resource):
 
 probe_post = api.model('Probe Post Informations', {
     'probe_name': fields.String(required=True),
-    'latitude': fields.Float(required=True),
-    'longitude': fields.Float(required=True)
+    'latitude': fields.Float(),
+    'longitude': fields.Float()
 })
 
 @ns_probe.route("/atmos/probe/add/")
@@ -328,8 +334,16 @@ class ProbePost(Resource):
         :return:
         """
         probe_name = api.payload['probe_name']
-        latitude = api.payload['latitude']
-        longitude = api.payload['longitude']
+        if(api.payload['latitude'] != "null"):
+            latitude = api.payload['latitude']
+        else:
+            latitude = "null"
+
+
+        if(api.payload['longitude'] != "null"):
+            longitude = api.payload['longitude']
+        else:
+            longitude = "null"
 
         values = {'name': probe_name, 'latitude': latitude, 'longitude': longitude}
 
