@@ -93,9 +93,9 @@ class MeasureAll(Resource):
 
             for i in range(1, len(ids) + 1):
                 MEASURES.append({'probe_id': probe_id, 'measure_id' : (i - 1), 'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]),
-                                 'date': sql_select_date(ids[i - 1]), 'error': False})
+                                 'date': sql_select_date(ids[i - 1]), 'error': {'flag': False}})
         except Exception as e:
-            MEASURES = {'probe_id': probe_id, 'error' : json.dumps(str(e))}
+            MEASURES = {'probe_id': probe_id, 'error' : {'flag': True, 'type' : json.dumps(str(e))}}
         return MEASURES, 200
 
 @ns_measure.route("/atmos/measure/<measure_id>")
@@ -111,9 +111,9 @@ class MeasureOne(Resource):
         """
         try:
             mesure = {'measure_id' : measure_id, 'temp': sql_select_temp(measure_id), 'humidite': sql_select_humid(measure_id),
-                      'date': sql_select_date(measure_id), 'error': False}
+                      'date': sql_select_date(measure_id), 'error': {'flag': False}}
         except Exception as e:
-            mesure = {'measure_id' : measure_id, 'error' : json.dumps(str(e))}
+            mesure = {'measure_id' : measure_id, 'error' : {'flag': True, 'type' : json.dumps(str(e))}}
             return mesure, 400
         return mesure, 200
 
@@ -133,7 +133,7 @@ class MeasureOne(Resource):
             dbCursor.execute("ALTER TABLE MESURE AUTO_INCREMENT = 1")
             atmosDB.commit()
         except Exception as e:
-            return {'error': e}, 400
+            return {'error': {'flag': True, 'type' : json.dumps(str(e))}}, 400
 
 
 
@@ -163,9 +163,9 @@ class MeasureDay(Resource):
 
             for i in range(1, len(ids)):
                 MEASURES.append({'probe_id' : probe_id, 'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]),
-                                 'date': sql_select_date(ids[i - 1]), 'error' : False})
+                                 'date': sql_select_date(ids[i - 1]), 'error' : {'flag': False}})
         except Exception as e:
-            return {'probe_id': probe_id, 'error' : json.dumps(str(e))}
+            return {'probe_id': probe_id, 'error' : {'flag': True, 'type' : json.dumps(str(e))}}
         return MEASURES, 200
 
 @ns_measure.route("/atmos/measure/last/<probe_id>")
@@ -184,9 +184,9 @@ class MeasureLast(Resource):
             lastId = dbCursor.fetchone()
             lastId = int(lastId[0])
             mesure = {'probe_id' : probe_id, 'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId),
-                      'date': sql_select_date(lastId)}
+                      'date': sql_select_date(lastId), 'error': {'flag': False}}
         except Exception as e:
-            mesure = {'probe_id' : probe_id, 'error' : json.dumps(str(e))}
+            mesure = {'probe_id' : probe_id, 'error' : {'flag': True, 'type' : json.dumps(str(e))}}
             return mesure, 400
         return mesure, 200
 
@@ -215,9 +215,9 @@ class MeasureLastAllProbes(Resource):
                 lastId = dbCursor.fetchone()
                 lastId = int(lastId[0])
                 MEASURES.append({'probe_id' : i,'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId),
-                                 'date': sql_select_date(lastId), 'error': False})
+                                 'date': sql_select_date(lastId), 'error': {'flag': False}})
             except Exception as e:
-                MEASURES.append({'probe_id' : i, 'error' : json.dumps(str(e))})
+                MEASURES.append({'probe_id' : i, 'error' : {'flag': True, 'type' : json.dumps(str(e))}})
 
 
         return MEASURES, 200
@@ -296,9 +296,9 @@ class ProbeList(Resource):
                 dbCursor.execute("SELECT sonde_active FROM SONDE WHERE id_sonde=%d" % i)
                 active = json.dumps(dbCursor.fetchone()[0])
 
-                PROBES.append({'id': (i - 1), 'user': user, 'pos_x': pos_x, 'pos_y': pos_y, 'name': name, 'active': active, 'error' : False})
+                PROBES.append({'id': (i - 1), 'user': user, 'pos_x': pos_x, 'pos_y': pos_y, 'name': name, 'active': active, 'error' : {'flag': False}})
             except Exception as e:
-                PROBES.append({'id': (i - 1), 'error' : json.dumps(str(e))})
+                PROBES.append({'id': (i - 1), 'error' : {'flag': True, 'type' : json.dumps(str(e))}})
 
 
         return PROBES, 200
@@ -367,10 +367,10 @@ class ProbeChangeState(Resource):
                 atmosDB.commit()
                 state = "active"
         except Exception as e:
-            return {'probe_id': probe_id, 'state': "undefined", 'error': json.dumps(str(e))}, 400
+            return {'probe_id': probe_id, 'state': "undefined", 'error': {'flag': True, 'type' : json.dumps(str(e))}}, 400
 
 
-        return {'probe_id': probe_id, 'state': state, 'error': False}, 200
+        return {'probe_id': probe_id, 'state': state, 'error': {'flag': False}}, 200
 
 
 if __name__ == '__main__':
