@@ -86,12 +86,16 @@ class MeasureAll(Resource):
         :param probe_id:
         :return:
         """
-        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s" % probe_id)
-        ids = dbCursor.fetchall()
         MEASURES = []
-        for i in range(1, len(ids) + 1):
-            MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]),
-                             'date': sql_select_date(ids[i - 1])})
+        try:
+            dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s" % probe_id)
+            ids = dbCursor.fetchall()
+
+            for i in range(1, len(ids) + 1):
+                MEASURES.append({'probe_id': probe_id, 'measure_id' : (i - 1), 'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]),
+                                 'date': sql_select_date(ids[i - 1]), 'error': False})
+        except Exception as e:
+            MEASURES = {'probe_id': probe_id, 'error' : json.dumps(str(e))}
         return MEASURES, 200
 
 @ns_measure.route("/atmos/measure/<measure_id>")
@@ -105,8 +109,12 @@ class MeasureOne(Resource):
         :param measure_id:
         :return:
         """
-        mesure = {'temp': sql_select_temp(measure_id), 'humidite': sql_select_humid(measure_id),
-                  'date': sql_select_date(measure_id)}
+        try:
+            mesure = {'measure_id' : measure_id, 'temp': sql_select_temp(measure_id), 'humidite': sql_select_humid(measure_id),
+                      'date': sql_select_date(measure_id), 'error': False}
+        except Exception as e:
+            mesure = {'measure_id' : measure_id, 'error' : json.dumps(str(e))}
+            return mesure, 400
         return mesure, 200
 
     @api.response(204, 'Measure : Measure deleted')
@@ -118,14 +126,18 @@ class MeasureOne(Resource):
         :param measure_id:
         :return:
         """
-        dbCursor.execute("DELETE FROM MESURE WHERE id_mesure= %s" % measure_id)
-        #dbCursor.execute("SET @num := 0")
-        #dbCursor.execute("UPDATE MESURE SET id_mesure = @num := (@num+1)")
-        dbCursor.execute("ALTER TABLE MESURE AUTO_INCREMENT = 1")
+        try:
+            dbCursor.execute("DELETE FROM MESURE WHERE id_mesure= %s" % measure_id)
+            #dbCursor.execute("SET @num := 0")
+            #dbCursor.execute("UPDATE MESURE SET id_mesure = @num := (@num+1)")
+            dbCursor.execute("ALTER TABLE MESURE AUTO_INCREMENT = 1")
+            atmosDB.commit()
+        except Exception as e:
+            return {'error': e}, 400
 
-        atmosDB.commit()
 
-        return '', 204
+
+        return {'error': False}, 204
 
 @ns_measure.route("/atmos/measure/day/<probe_id>")
 class MeasureDay(Resource):
@@ -143,13 +155,17 @@ class MeasureDay(Resource):
         DateNow = DateNow.strftime("%Y-%m-%d %H:%M:%S")
         DateBefore = DateBefore.strftime("%Y-%m-%d %H:%M:%S")
 
-        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s and mesure_date between '%s' and '%s'" % (
-            probe_id, DateBefore, DateNow))
-        ids = dbCursor.fetchall()
         MEASURES = []
-        for i in range(1, len(ids)):
-            MEASURES.append({'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]),
-                             'date': sql_select_date(ids[i - 1])})
+        try:
+            dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s and mesure_date between '%s' and '%s'" % (
+                probe_id, DateBefore, DateNow))
+            ids = dbCursor.fetchall()
+
+            for i in range(1, len(ids)):
+                MEASURES.append({'probe_id' : probe_id, 'temp': sql_select_temp(ids[i - 1]), 'humidite': sql_select_humid(ids[i - 1]),
+                                 'date': sql_select_date(ids[i - 1]), 'error' : False})
+        except Exception as e:
+            return {'probe_id': probe_id, 'error' : json.dumps(str(e))}
         return MEASURES, 200
 
 @ns_measure.route("/atmos/measure/last/<probe_id>")
@@ -163,12 +179,15 @@ class MeasureLast(Resource):
         :param probe_id:
         :return:
         """
-
-        dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s ORDER BY id_mesure DESC LIMIT 1" % probe_id)
-        lastId = dbCursor.fetchone()
-        lastId = int(lastId[0])
-        mesure = {'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId),
-                  'date': sql_select_date(lastId)}
+        try:
+            dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s ORDER BY id_mesure DESC LIMIT 1" % probe_id)
+            lastId = dbCursor.fetchone()
+            lastId = int(lastId[0])
+            mesure = {'probe_id' : probe_id, 'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId),
+                      'date': sql_select_date(lastId)}
+        except Exception as e:
+            mesure = {'probe_id' : probe_id, 'error' : json.dumps(str(e))}
+            return mesure, 400
         return mesure, 200
 
 
@@ -182,19 +201,25 @@ class MeasureLastAllProbes(Resource):
         Print last measure of all probe
         :return:
         """
-        dbCursor.execute("SELECT id_sonde FROM SONDE")
+        try:
+            dbCursor.execute("SELECT id_sonde FROM SONDE")
+            ids = dbCursor.fetchall()
+        except Exception as e:
+            return {'error' : json.dumps(str(e))}, 400
 
 
-        ids = dbCursor.fetchall()
         MEASURES = []
-        print(len(ids))
         for i in range(1, len(ids)):
+            try:
+                dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s ORDER BY id_mesure DESC LIMIT 1" % ids[i])
+                lastId = dbCursor.fetchone()
+                lastId = int(lastId[0])
+                MEASURES.append({'probe_id' : i,'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId),
+                                 'date': sql_select_date(lastId), 'error': False})
+            except Exception as e:
+                MEASURES.append({'probe_id' : i, 'error' : json.dumps(str(e))})
 
-            dbCursor.execute("SELECT id_mesure FROM MESURE WHERE id_sonde = %s ORDER BY id_mesure DESC LIMIT 1" % ids[i])
-            lastId = dbCursor.fetchone()
-            lastId = int(lastId[0])
-            MEASURES.append({'temp': sql_select_temp(lastId), 'humidite': sql_select_humid(lastId),
-                             'date': sql_select_date(lastId), 'id': (i)})
+
         return MEASURES, 200
 
 
@@ -253,25 +278,33 @@ class ProbeList(Resource):
         dbCursor.execute("SELECT id_sonde FROM SONDE")
         ids = dbCursor.fetchall()
         PROBES = []
+
         for i in range(1, len(ids) + 1):
-            dbCursor.execute("SELECT id_utilisateur FROM SONDE WHERE id_sonde='%s'" % i)
-            user = json.dumps(dbCursor.fetchone()[0])
+            try:
+                dbCursor.execute("SELECT id_utilisateur FROM SONDE WHERE id_sonde=%d" % i)
+                user = json.dumps(dbCursor.fetchone()[0])
 
-            dbCursor.execute("SELECT sonde_pos_latitude FROM SONDE WHERE id_sonde='%s'" % i)
-            pos_x = json.dumps(dbCursor.fetchone()[0])
+                dbCursor.execute("SELECT sonde_pos_latitude FROM SONDE WHERE id_sonde=%d" % i)
+                pos_x = json.dumps(dbCursor.fetchone()[0])
 
-            dbCursor.execute("SELECT sonde_pos_longitude FROM SONDE WHERE id_sonde='%s'" % i)
-            pos_y = json.dumps(dbCursor.fetchone()[0])
+                dbCursor.execute("SELECT sonde_pos_longitude FROM SONDE WHERE id_sonde=%d" % i)
+                pos_y = json.dumps(dbCursor.fetchone()[0])
 
-            dbCursor.execute("SELECT sonde_nom FROM SONDE WHERE id_sonde='%s'" % i)
-            name = json.dumps(dbCursor.fetchone()[0])
+                dbCursor.execute("SELECT sonde_nom FROM SONDE WHERE id_sonde=%d" % i)
+                name = json.dumps(dbCursor.fetchone()[0])
 
-            dbCursor.execute("SELECT sonde_active FROM SONDE WHERE id_sonde='%s'" % i)
-            active = json.dumps(dbCursor.fetchone()[0])
+                dbCursor.execute("SELECT sonde_active FROM SONDE WHERE id_sonde=%d" % i)
+                active = json.dumps(dbCursor.fetchone()[0])
 
-            PROBES.append({'id': (i - 1), 'user': user, 'pos_x': pos_x, 'pos_y': pos_y, 'name': name, 'active': active})
+                PROBES.append({'id': (i - 1), 'user': user, 'pos_x': pos_x, 'pos_y': pos_y, 'name': name, 'active': active, 'error' : False})
+            except Exception as e:
+                PROBES.append({'id': (i - 1), 'error' : json.dumps(str(e))})
+
 
         return PROBES, 200
+
+
+
 
 
 probe_post = api.model('Probe Post Informations', {
@@ -304,6 +337,8 @@ class ProbePost(Resource):
             "INSERT INTO SONDE (id_utilisateur, sonde_pos_latitude, sonde_pos_longitude, sonde_nom, sonde_active)"
             " VALUES (%s, %s, %s, '%s', 1)" % (
                 1, latitude, longitude, probe_name))
+
+
         atmosDB.commit()
 
 
@@ -320,18 +355,22 @@ class ProbeChangeState(Resource):
         :param probe_id:
         :return:
         """
-        dbCursor.execute("SELECT sonde_active FROM SONDE WHERE id_sonde = %s" % probe_id)
-        activity = dbCursor.fetchone()[0]
-
-        if (activity == 1):
-            dbCursor.execute("UPDATE SONDE SET sonde_active = 0 WHERE id_sonde = %s" % probe_id)
-            atmosDB.commit()
-        else:
-            if (activity == 0):
+        try:
+            dbCursor.execute("SELECT sonde_active FROM SONDE WHERE id_sonde = %s" % probe_id)
+            activity = dbCursor.fetchone()[0]
+            if (activity == 1):
+                dbCursor.execute("UPDATE SONDE SET sonde_active = 0 WHERE id_sonde = %s" % probe_id)
+                atmosDB.commit()
+                state = "unactive"
+            elif (activity == 0):
                 dbCursor.execute("UPDATE SONDE SET sonde_active = 1 WHERE id_sonde = %s" % probe_id)
                 atmosDB.commit()
+                state = "active"
+        except Exception as e:
+            return {'probe_id': probe_id, 'state': "undefined", 'error': json.dumps(str(e))}, 400
 
-        return 'State changed', 200
+
+        return {'probe_id': probe_id, 'state': state, 'error': False}, 200
 
 
 if __name__ == '__main__':
