@@ -23,7 +23,7 @@ while True:
     try:
         temp = random.randint(17, 23)
         humid = random.randint(50, 60)
-        probe = random.randint(1,12)
+        probe = random.randint(1,5)
         http_post(probe, temp, humid)
         print("POST: Sonde:"+ str(probe) + " + Temp :" + str(temp) + ' + Humid : ' + str(humid))
         #time.sleep(1)
