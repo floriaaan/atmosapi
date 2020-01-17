@@ -34,17 +34,12 @@ def http_post(probe_id, temp, humidity):
 
 
 def moyenneTemp():
-    var1 = temp_sensor.temperature
-    time.sleep(1)
-    var2 = temp_sensor.temperature
-    time.sleep(1)
-    var3 = temp_sensor.temperature
-    time.sleep(1)
-    var4 = temp_sensor.temperature
-    time.sleep(1)
-    var5 = temp_sensor.temperature
-    time.sleep(1)
-    moy_temp = (var1 + var2 + var3 + var4 + var5) / 5
+    temp = 0
+    for i in range(0,5):
+        temp += temp_sensor.temperature
+        time.sleep(1)
+
+    moy_temp = temp / 5
     moy_temparr = round(moy_temp, 2)
     lcd.clear()
     lcd.putstr("Temperature :\n " + str(moy_temparr) + " C")
@@ -52,18 +47,13 @@ def moyenneTemp():
 
 
 def moyenneHumid():
-    var1 = temp_sensor.relative_humidity
-    time.sleep(1)
-    var2 = temp_sensor.relative_humidity
-    time.sleep(1)
-    var3 = temp_sensor.relative_humidity
-    time.sleep(1)
-    var4 = temp_sensor.relative_humidity
-    time.sleep(1)
-    var5 = temp_sensor.relative_humidity
-    time.sleep(1)
+    humid = 0
+    for i in range(0,5):
+        humid += temp_sensor.relative_humidity
+        time.sleep(1)
 
-    moy_humi = (var1 + var2 + var3 + var4 + var5) / 5
+
+    moy_humi = humid / 5
     moy_humiarr = round(moy_humi, 2)
     lcd.clear()
     lcd.putstr("Humidite :\n " + str(moy_humiarr) + " %")
