@@ -250,6 +250,7 @@ class MeasurePost(Resource):
         :param probe_id:
         :return:
         """
+        print(api.payload)
         probe_id = api.payload['probe_id']
 
         temp = api.payload['temp']
@@ -344,6 +345,7 @@ class ProbePost(Resource):
             longitude = api.payload['longitude']
         else:
             longitude = "null"
+
 
         values = {'name': probe_name, 'latitude': latitude, 'longitude': longitude}
 

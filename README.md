@@ -7,11 +7,18 @@ Réalisation d'une API REST avec Flask (Python)
 
 ## Liens utiles
 
-Site web de Atmos'fr : http://emilie.dehant.webconcepteur.fr/atmosfr
+Site web de Atmos'fr :
+```
+http://emilie.dehant.webconcepteur.fr/atmosfr
+```
+Site demo de Atmos'Home :
+```
+https://floriaaan.github.io/atmos-home
+```
 
 ## Comment installer le projet ⁉️
 
-Coté serveur, Raspberry Pi
+Coté serveur, (Raspberry Pi)
 
 ```
 
@@ -34,14 +41,17 @@ python3 atmosapi.py
 Coté capteur, ESP8266-01
 
 ```
+python3 -m pip install esptool
+esptool --port (port de connexion de votre flasher esp) erase_flash
+esptool --port (PORT) --baud 115200 write_flash --flash_size=detect 0 esp8266-20190529-v1.11.bin
 
-
+Intégrer les scripts sensor via un IDE compatible (ex: Thonny)
 ```
 
 Coté client
 
 ```
-unzip atmoshome.zip
+git clone https://github.com/floriaaan/atmos-home/
 Remplacer tout les '192.168.43.57' par :
 -   Soit l'adresse IP du Raspberry si vous hébergez la Web App sur un autre serveur
         (requis: le serveur doit être connecté au même wifi que le Raspberry et le capteur)
