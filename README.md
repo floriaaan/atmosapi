@@ -1,5 +1,5 @@
 # Atmos'fr
-Projet CESI - Réalisation d'une sonde météorologique avec un BACK-END supporté par un Raspberry Pi 3
+Projet CESI - Réalisation d'une sonde météorologique 
 
 
 
